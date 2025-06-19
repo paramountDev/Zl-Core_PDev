@@ -1,0 +1,128 @@
+##################################
+#   ZlomCore Main Config
+#   Made by Paramount_Dev
+#   FunPay Link: https://funpay.com/uk/users/14397429/
+##################################
+
+
+##### FURNACE PRIVATE CONFIG #####
+items:
+  DIAMOND: 3
+  DIAMOND_BLOCK: 27
+  NETHERITE_INGOT: 5
+  NETHERITE_BLOCK: 45
+burn_multiplier: 30
+
+custom_furnace:
+  name: "&6[Приватная Печь]"
+  lore:
+    - "&7Эта печь защищает территорию"
+    - "&7Активируй её алмазом и углём"
+
+admin_bypass: true
+
+
+
+##### BOOSTY CONNECTOR CONFIG #####
+default-limit: 3
+boostyL1: 5
+boostyL2: 8
+boostyL3: 10
+boostyL4: 15
+deny-message: "&cВы достигли лимита выставления лотов."
+admin-changed-message: "&aАдминистратор изменил ваш лимит лотов на: %limit%"
+
+
+
+##### PARACLANS CONFIG #####
+max-members: 10
+create-price: 1000.0
+roles:
+  level1:
+    name: "Новичок"
+    can-open-settings: false
+    can-accept-requests: false
+    can-deny-requests: false
+    can-declare-war: false
+    can-end-war: false
+    can-trade-contract: false
+    can-trade-end: false
+    can-remove-clan: false
+  level2:
+    name: "Бывалый"
+    can-open-settings: false
+    can-accept-requests: true
+    can-deny-requests: true
+    can-declare-war: false
+    can-end-war: false
+    can-trade-contract: false
+    can-trade-end: false
+    can-remove-clan: false
+  level3:
+    name: "Командир"
+    can-open-settings: true
+    can-accept-requests: true
+    can-deny-requests: true
+    can-declare-war: true
+    can-end-war: true
+    can-trade-contract: true
+    can-trade-end: true
+    can-remove-clan: false
+blacklist:
+  - admin
+  - owner
+  - mod
+  - helper
+  - staff
+  - test
+
+
+
+
+messages:
+
+  # СООБЩЕНИЯ ЭКОНОМИКИ
+  balance: "&aВаш баланс: %balance%"
+  sent_money: "&aВы отправили %amount% игроку %player%."
+  received_money: "&aВы получили %amount% от %player%."
+  added_money: "&aВы выдали %amount% игроку %player%."
+  taken_money: "&aВы изъяли %amount% у игрока %player%."
+  penalty: "&cВы были оштрафованы на %amount% по причине: %reason%"
+  ah_blocked: "&cВам запрещено использовать /ah до %time%. Причина: %reason%"
+  ah_block_expired: "&aВаш блок на /ah истёк."
+
+  # БАЗОВЫЕ СООБЩЕНИЯ
+  clan-created: "&aКлан {clan} создан!"
+  already-in-clan: "&cВы уже в клане."
+  clan-exists: "&cКлан с таким именем уже существует."
+  clan-name-blacklisted: "&cЭто имя клана запрещено."
+  clan-not-found: "&cКлан не найден."
+  clan-full: "&cКлан заполнен."
+  clan-joined-request: "&aЗаявка на вступление отправлена!"
+  only-owner-can-remove: "&cТолько владелец клана может удалить его."
+  clan-removed: "&eКлан {clan} был удалён."
+  unknown-command: "&cНеизвестная команда."
+
+  # ВОЙНА
+  only-owner-can-declarewar: "&cТолько владелец клана может объявить войну."
+  wardeclare: "§4{clan1} объявил войну клану {clan2}"
+  war-already-declared: "&cВы уже воюете с этим кланом."
+
+  # МИР
+  only-owner-can-warend: "&cТолько владелец клана может объявить мир."
+  endwar: "§a{clan1} объявил мир клану {clan2}"
+  clan-not-war-with: "&cВы не воюете с этим кланом."
+
+  # ТОРГОВОЕ СОГЛАШЕНИЕ
+  only-owner-can-tradecontract: "&cТолько владелец клана может объявить торговое соглашение."
+  tradecontract: "§a{clan1} заключил торговое соглашение с кланом {clan2}"
+  clan-not-trade-with: "&cВы уже имеете торговое соглашения с этим кланом."
+
+  # РАЗОРВАТЬ ТОРГОВОЕ СОГЛАШЕНИЕ
+  only-owner-can-tradecontractend: "&cТолько владелец клана может разорвать торговое соглашение."
+  tradecontractend: "§4{clan1} разорвал торговое соглашение с кланом {clan2}"
+  clan-not-trade-withend: "&cВы не имеете торговое соглашения с этим кланом."
+
+  # ДЕНЕЖНЫЕ ОПЕРАЦИИ
+  not-enough-money: "§cУ вас недостаточно средств для создания клана. Требуется §e{price}$§c."
+  money-withdrawn: "§aС вашего счета снято §e{price}$ §aза создание клана."

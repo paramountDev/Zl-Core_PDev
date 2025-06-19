@@ -1,0 +1,55 @@
+name: ZlomCore_PDev
+version: '1.0'
+main: dev.paramountdev.zlomCore_PDev.ZlomCore_PDev
+api-version: '1.21'
+author: "ParamountDev"
+website: https://funpay.com/uk/users/14397429/
+
+depend: [Vault]
+loadbefore:
+  - HyperAuctions
+  - CrazyAuctions
+  - Essentials
+
+
+commands:
+  #BOOSTY_CONNECTOR
+  checkslots:
+    description: Проверка количества доступных слотов
+    usage: /checkslots
+  boostysetlimit:
+    description: Установить лимит слотов игроку
+    usage: /boostysetlimit <игрок> <слоты>
+    permission: boosty.admin
+
+    #FURNACE PRIVATE
+    fp:
+      description: Команды для приватных печек
+      usage: /fp <give or   list>
+
+    #GALAXY ECONOMY
+    penalty:
+      usage: /penalty <ник> <сумма> <причина>
+      permission: customeconomy.admin
+      ahblock:
+        usage: /ahblock <ник> <время в минутах> <причина>
+        permission: customeconomy.admin
+      money:
+        usage: /money [send|add|take] <ник> <сумма>
+    permissions:
+      customeconomy.admin:
+        default: op
+
+    #PARACLANS
+    pclans:
+      description: Основная команда для управления кланами
+      usage: /pclans <create|join|remove> <имя>
+      aliases: [ clan, clans ]
+
+
+
+
+permissions:
+  #BOOSTY_CONNECTOR
+  boosty.admin:
+    default: op
