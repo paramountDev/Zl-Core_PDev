@@ -3,13 +3,16 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.UUID;
 
 public class ClanRoleManager {
 
     private final NavigableMap<Integer, ClanRole> roles = new TreeMap<>();
     private final Map<String, Integer> playerLevels = new HashMap<>(); // key: clanName:uuid
-
     private final FileConfiguration config;
 
     public ClanRoleManager(FileConfiguration config) {
@@ -47,11 +50,6 @@ public class ClanRoleManager {
         return roles.get(level);
     }
 
-    public String getRoleName(int level) {
-        ClanRole role = getRole(level);
-        return role != null ? role.getName() : null;
-    }
-
     public Integer getNextLevel(int currentLevel) {
         return roles.higherKey(currentLevel);
     }
@@ -62,19 +60,13 @@ public class ClanRoleManager {
 
     public boolean hasPermission(int level, String permissionKey) {
         ClanRole role = roles.get(level);
-        if (role == null) return false;
-        return role.getPermissions().getOrDefault(permissionKey, false);
+        return role != null && role.getPermissions().getOrDefault(permissionKey, false);
     }
-
-    // =====================
-    // Члены клана (уровни)
-    // =====================
 
     public boolean hasClanPermission(String clanName, UUID playerUUID, String permissionKey) {
         int level = getMemberLevel(clanName, playerUUID);
         return hasPermission(level, permissionKey);
     }
-
 
     public int getMemberLevel(String clanName, UUID uuid) {
         return playerLevels.getOrDefault(clanName + ":" + uuid.toString(), 1); // 1 = новичок по умолчанию
@@ -82,18 +74,6 @@ public class ClanRoleManager {
 
     public void setMemberLevel(String clanName, UUID uuid, int level) {
         playerLevels.put(clanName + ":" + uuid.toString(), level);
-    }
-
-    public void removeMember(String clanName, UUID uuid) {
-        playerLevels.remove(clanName + ":" + uuid.toString());
-    }
-
-    public void resetLevelsForClan(String clanName) {
-        playerLevels.keySet().removeIf(key -> key.startsWith(clanName + ":"));
-    }
-
-    public Map<Integer, ClanRole> getAllRoles() {
-        return Collections.unmodifiableMap(roles);
     }
 
     public static class ClanRole {
@@ -105,10 +85,6 @@ public class ClanRoleManager {
             this.level = level;
             this.name = name;
             this.permissions = permissions;
-        }
-
-        public int getLevel() {
-            return level;
         }
 
         public String getName() {

@@ -13,41 +13,38 @@ loadbefore:
 
 
 commands:
-  #BOOSTY_CONNECTOR
+  # BOOSTY CONNECTOR
   checkslots:
     description: Проверка количества доступных слотов
     usage: /checkslots
+
   boostysetlimit:
     description: Установить лимит слотов игроку
     usage: /boostysetlimit <игрок> <слоты>
     permission: boosty.admin
 
-    #FURNACE PRIVATE
-    fp:
-      description: Команды для приватных печек
-      usage: /fp <give or   list>
+  # FURNACE PRIVATE
+  fp:
+    description: Команды для приватных печек
+    usage: /fp <give | list>
 
-    #GALAXY ECONOMY
-    penalty:
-      usage: /penalty <ник> <сумма> <причина>
-      permission: customeconomy.admin
-      ahblock:
-        usage: /ahblock <ник> <время в минутах> <причина>
-        permission: customeconomy.admin
-      money:
-        usage: /money [send|add|take] <ник> <сумма>
-    permissions:
-      customeconomy.admin:
-        default: op
+  # GALAXY ECONOMY
+  penalty:
+    usage: /penalty <ник> <сумма> <причина>
+    permission: customeconomy.admin
 
-    #PARACLANS
-    pclans:
-      description: Основная команда для управления кланами
-      usage: /pclans <create|join|remove> <имя>
-      aliases: [ clan, clans ]
+  ahblock:
+    usage: /ahblock <ник> <время в минутах> <причина>
+    permission: customeconomy.admin
 
+  money:
+    usage: /money [send|add|take] <ник> <сумма>
 
-
+  # PARA CLANS
+  pclans:
+    description: Основная команда для управления кланами
+    usage: /pclans <create|join|remove> <имя>
+    aliases: [ clan, clans ]
 
 permissions:
   #BOOSTY_CONNECTOR

@@ -34,19 +34,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabCompleter {
 
+    private static ZlomCore_PDev instance;
+    private static BoostConnector boostConnector;
+    private static ClanRoleManager roleManager;
 
     private Economy economy;
-
-    private static ZlomCore_PDev instance;
-
-    private static BoostConnector boostConnector;
     private FurnaceProtectionManager manager;
     private BalanceManager balanceManager;
     private AhBlockManager ahBlockManager;
-
     private Scoreboard mainBoard;
     private File clansFile;
     private FileConfiguration clansConfig;
@@ -54,23 +53,12 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     public Map<UUID, String> playerClan = new HashMap<>();
     private FileConfiguration config;
     private Map<String, List<UUID>> joinRequests = new HashMap<>();
-    private static ClanRoleManager roleManager;
-
-    public ClanMenu getClanMenu() {
-        return clanMenu;
-    }
-
-    public static ClanRoleManager getRoleManager() {
-        return roleManager;
-    }
-
     private ClanMenu clanMenu;
 
     @Override
     public void onEnable() {
 
         saveDefaultConfig();
-
         instance = this;
 
         if (!setupEconomy()) {
@@ -79,31 +67,32 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
         Economy provider = getServer().getServicesManager().getRegistration(Economy.class).getProvider();
         getLogger().info("Провайдер Vault: " + (provider != null ? provider.getName() : "не найден."));
-        if(provider != null) {
+        if (provider != null) {
             getLogger().info("Vault успешно интегрирован. Плагин на экономику запущен.");
         }
 
         //
 
-        //BOOSTY CONNECTOR
+        // BOOSTY CONNECTOR
 
         boostConnector = new BoostConnector();
         boostConnector.loadSettings();
         getServer().getPluginManager().registerEvents(boostConnector, this);
         this.getCommand("boostysetlimit").setExecutor(boostConnector);
 
-        //BOOSTY CONNECTOR
+        // BOOSTY CONNECTOR
 
         //
 
-        //FURNACE PRIVATES
+        // FURNACE PRIVATES
 
         manager = new FurnaceProtectionManager(this);
         getServer().getPluginManager().registerEvents(manager, this);
         manager.startBurnTask();
-        new FurnaceCommand(this);
+        FurnaceCommand fp = new FurnaceCommand(this);
+        this.getCommand("fp").setExecutor(fp);
 
-        //FURNACE PRIVATES
+        // FURNACE PRIVATES
 
         //
 
@@ -162,7 +151,6 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         manager.saveProtections();
         manager.clearProtections();
 
-
         getLogger().log(Level.INFO, "\n");
         getLogger().info("\u001B[35m!---------------ZlomCore Plugin disabled---------------!\u001B[0m");
         getLogger().info("\u001B[35m!---------------Made by Paramount_Dev---------------!\u001B[0m");
@@ -201,7 +189,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         for (Map.Entry<String, Clan> entry : clans.entrySet()) {
             Clan clan = entry.getValue();
             clansConfig.set(entry.getKey() + ".owner", clan.owner.toString());
-            List<String> memberUUIDs = new ArrayList<>(clan.members);
+            List<String> memberUUIDs = new ArrayList<>(clan.getMembers());
             clansConfig.set(entry.getKey() + ".members", memberUUIDs);
         }
 
@@ -211,6 +199,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
             e.printStackTrace();
         }
     }
+
     private String getMessage(String path, Map<String, String> placeholders) {
         String message = config.getString("messages." + path, "&c[Ошибка сообщения: " + path + "]");
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
@@ -225,169 +214,160 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        onPclansCommand(sender, args);
+        return true;
+    }
+
+    public void onPclansCommand(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("§cThis command can only be used by players.");
-            return true;
+            return;
         }
 
         Player player = (Player) sender;
-        UUID uuid = player.getUniqueId();
-
+        UUID playerId = player.getUniqueId();
         if (args.length < 1) {
-            player.sendMessage("§c/pclans <create|join|remove|accept|deny|requests>");
-            return true;
+            return;
         }
 
         String action = args[0].toLowerCase();
-
+        String targetName;
+        OfflinePlayer targetPlayer;
+        UUID targetUUID;
 
         switch (action) {
-
-
             case "create":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans create <clan-name>");
-                    return true;
+                    return;
                 }
 
                 String clanName = args[1].toLowerCase();
-
-                if (playerClan.containsKey(uuid)) {
+                if (playerClan.containsKey(playerId)) {
                     player.sendMessage(getMessage("already-in-clan"));
-                    return true;
+                    return;
                 }
 
                 if (clans.containsKey(clanName)) {
                     player.sendMessage(getMessage("clan-exists"));
-                    return true;
+                    return;
                 }
 
                 List<String> blacklist = config.getStringList("blacklist");
                 if (blacklist.contains(clanName)) {
                     player.sendMessage(getMessage("clan-name-blacklisted"));
-                    return true;
+                    return;
                 }
 
                 double price = config.getDouble("create-price", 0.0);
                 if (price > 0.0) {
                     if (!getEconomy().has(player, price)) {
                         player.sendMessage(getMessage("not-enough-money", Map.of("price", String.valueOf(price))));
-                        return true;
+                        return;
                     }
-
-                    // Снятие денег
                     getEconomy().withdrawPlayer(player, price);
                     player.sendMessage(getMessage("money-withdrawn", Map.of("price", String.valueOf(price))));
                 }
 
-                Clan newClan = new Clan(clanName, uuid, new HashSet<>(List.of(uuid.toString())));
+                Clan newClan = new Clan(clanName, playerId, new HashSet<>(List.of(playerId.toString())));
                 clans.put(clanName, newClan);
-                playerClan.put(uuid, clanName);
+                playerClan.put(playerId, clanName);
                 player.sendMessage(getMessage("clan-created", Map.of("clan", clanName)));
-                updatePlayerPrefix(player);
-                updatePlayerNametag(player);
+                updatePlayerNames(player);
                 break;
-
-
-
             case "leave":
-                String currentClanName = playerClan.get(uuid);
+                String currentClanName = playerClan.get(playerId);
                 if (currentClanName == null) {
                     player.sendMessage("§cВы не состоите в клане.");
-                    return true;
+                    return;
                 }
                 Clan currentClan = clans.get(currentClanName);
-                if (currentClan.owner.equals(uuid)) {
+                if (currentClan.owner.equals(playerId)) {
                     player.sendMessage("§cВы не можете выйти из собственного клана. Чтобы удалить клан, используйте /pclans remove " + currentClanName);
-                    return true;
+                    return;
                 }
-                // Удаляем игрока из клана
-                currentClan.members.remove(uuid.toString());
-                playerClan.remove(uuid);
+                currentClan.getMembers().remove(playerId.toString());
+                playerClan.remove(playerId);
                 player.sendMessage("§aВы вышли из клана " + currentClanName);
-                updatePlayerPrefix(player);
-                updatePlayerNametag(player);
+                updatePlayerNames(player);
                 break;
-
-
             case "join":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans join <clan-name>");
-                    return true;
+                    return;
+                }
+                if (playerClan.containsKey(playerId)) {
+                    player.sendMessage(getMessage("already-in-clan"));
+                    return;
                 }
                 clanName = args[1].toLowerCase();
-                if (playerClan.containsKey(uuid)) {
-                    player.sendMessage(getMessage("already-in-clan"));
-                    return true;
-                }
                 Clan targetClan = clans.get(clanName);
                 if (targetClan == null) {
                     player.sendMessage(getMessage("clan-not-found"));
-                    return true;
+                    return;
                 }
-                if (targetClan.members.size() >= config.getInt("max-members", 10)) {
+                if (targetClan.getMembers().size() >= config.getInt("max-members", 10)) {
                     player.sendMessage(getMessage("clan-full"));
-                    return true;
+                    return;
                 }
-                joinRequests.computeIfAbsent(clanName, k -> new ArrayList<>()).add(uuid);
+                joinRequests.computeIfAbsent(clanName, k -> new ArrayList<>()).add(playerId);
                 Player owner = Bukkit.getPlayer(targetClan.owner);
                 if (owner != null) {
                     owner.sendMessage("§eИгрок \"" + player.getName() + "\" хочет вступить в ваш клан. Используйте /pclans accept " + player.getName() + " или /pclans deny " + player.getName());
                 }
                 player.sendMessage(getMessage("clan-joined-request"));
                 break;
-
-
             case "accept":
                 if (args.length < 2) {
                     player.sendMessage("§c/pclans accept <player-name>");
-                    return true;
+                    return;
                 }
-                String targetName = args[1];
-                OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetName);
-                UUID targetUUID = targetPlayer.getUniqueId();
-                String ownerClanName = playerClan.get(uuid);
+                String ownerClanName = playerClan.get(playerId);
                 if (ownerClanName == null || !clans.containsKey(ownerClanName)) {
                     player.sendMessage("§cТолько владелец клана может принимать игроков.");
-                    return true;
+                    return;
                 }
-                Clan ownerClan = clans.get(ownerClanName);
 
-                if (!checkClanPermission(player, "can-accept-requests")) return true;
+                if (!checkClanPermission(player, "can-accept-requests")) {
+                    return;
+                }
 
+                targetName = args[1];
+                targetPlayer = Bukkit.getOfflinePlayer(targetName);
+                targetUUID = targetPlayer.getUniqueId();
                 List<UUID> requests = joinRequests.getOrDefault(ownerClanName, new ArrayList<>());
+
                 if (requests.contains(targetUUID)) {
-                    ownerClan.members.add(targetUUID.toString());
+                    Clan ownerClan = clans.get(ownerClanName);
+                    ownerClan.getMembers().add(targetUUID.toString());
+
                     playerClan.put(targetUUID, ownerClanName);
                     requests.remove(targetUUID);
                     player.sendMessage("§aИгрок " + targetName + " принят в клан.");
                     Player joined = Bukkit.getPlayer(targetUUID);
                     if (joined != null) {
                         joined.sendMessage("§aВы были приняты в клан " + ownerClanName);
-                        updatePlayerPrefix(joined);
-                        updatePlayerNametag(joined);
+                        updatePlayerNames(joined);
                     }
                 } else {
                     player.sendMessage("§cУ игрока нет заявки в ваш клан.");
                 }
                 break;
-
-
             case "deny":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans deny <player-name>");
-                    return true;
+                    return;
                 }
                 targetName = args[1];
                 targetPlayer = Bukkit.getOfflinePlayer(targetName);
                 targetUUID = targetPlayer.getUniqueId();
-                ownerClanName = playerClan.get(uuid);
+                ownerClanName = playerClan.get(playerId);
                 if (ownerClanName == null || !clans.containsKey(ownerClanName)) {
                     player.sendMessage("§cТолько владелец клана может отклонять заявки.");
-                    return true;
+                    return;
                 }
 
-                if (!checkClanPermission(player, "can-deny-requests")) return true;
+                if (!checkClanPermission(player, "can-deny-requests")) return;
 
                 requests = joinRequests.getOrDefault(ownerClanName, new ArrayList<>());
                 if (requests.remove(targetUUID)) {
@@ -398,46 +378,36 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                     player.sendMessage("§cУ игрока нет заявки в ваш клан.");
                 }
                 break;
-
-
             case "requests":
-                ownerClanName = playerClan.get(uuid);
+                ownerClanName = playerClan.get(playerId);
                 if (ownerClanName == null || !clans.containsKey(ownerClanName)) {
                     player.sendMessage("§cТолько владелец клана может просматривать заявки.");
-                    return true;
-                };
-                ownerClan = clans.get(ownerClanName);
-                if (!ownerClan.owner.equals(uuid)) {
+                    return;
+                }
+                Clan ownerClan = clans.get(ownerClanName);
+                if (!ownerClan.owner.equals(playerId)) {
                     player.sendMessage("§cТолько владелец клана может просматривать заявки.");
-                    return true;
+                    return;
                 }
                 requests = joinRequests.getOrDefault(ownerClanName, new ArrayList<>());
                 if (requests.isEmpty()) {
                     player.sendMessage("§eНет активных заявок в клан.");
                 } else {
                     player.sendMessage("§aЗаявки в клан:");
-                    for (UUID reqUUID : requests) {
+                    requests.forEach(reqUUID -> {
                         OfflinePlayer reqPlayer = Bukkit.getOfflinePlayer(reqUUID);
                         player.sendMessage("§7- " + reqPlayer.getName());
-                    }
+                    });
                 }
                 break;
-
-
             case "my":
                 UUID uuidPlayer = player.getUniqueId();
                 String clanNameMy = playerClan.get(uuidPlayer);
-                if (clanNameMy == null) {
-                    player.sendMessage("§cВы не состоите в клане.");
-                    return true;
-                }
-
                 Clan clanMy = clans.get(clanNameMy);
                 if (clanMy == null) {
                     sender.sendMessage("§cКлан не найден.");
-                    return true;
+                    return;
                 }
-                String ownerName = Bukkit.getPlayer(clanMy.owner).getName();
 
                 // Убираем несуществующие кланы из списка войн
                 List<Clan> validWars = new ArrayList<>();
@@ -449,9 +419,9 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                 clanMy.setWars(validWars);
 
                 StringBuilder myWarsString = new StringBuilder();
-                for (Clan warClan : validWars) {
-                    myWarsString.append(warClan.getName()).append(" ");
-                }
+                validWars.forEach(warClan -> myWarsString.append(warClan.getName()).append(" "));
+
+                String ownerName = Bukkit.getPlayer(clanMy.owner).getName();
 
                 player.sendMessage("§5-----------------------------------------------------");
                 player.sendMessage("");
@@ -461,37 +431,34 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                 player.sendMessage(" - §aТекущее кол-во участников: §3§l" + clanMy.members.size());
                 player.sendMessage("");
                 player.sendMessage(" - §aВраждующие кланы: §3§l" + (myWarsString.length() > 0 ? myWarsString : "Отсутствуют"));
-                player.sendMessage(" - §aПриваты клана: "); //TODO ДОБАВЬ ПРИВАТЫ СЮДА
-                player.sendMessage("");
                 player.sendMessage("§5-----------------------------------------------------");
                 break;
-
-
             case "warend":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans wardend <clan-name>");
-                    return true;
+                    return;
                 }
 
                 String targetEndClanName = args[1].toLowerCase();
-
                 if (!clans.containsKey(targetEndClanName)) {
                     player.sendMessage(getMessage("clan-not-found"));
-                    return true;
+                    return;
                 }
 
-                UUID playerUUIDEnd = player.getUniqueId();
-                String myClanNameEnd = playerClan.get(playerUUIDEnd);
-
+                UUID playerIdEnd = player.getUniqueId();
+                String myClanNameEnd = playerClan.get(playerIdEnd);
                 Clan myClanEnd = clans.get(myClanNameEnd);
 
-                if (!checkClanPermission(player, "can-end-war")) return true;
+                if (!checkClanPermission(player, "can-end-war")) {
+                    return;
+                }
 
                 Clan targetClan2 = clans.get(targetEndClanName);
                 if(!myClanEnd.getWars().contains(targetClan2)) {
                     player.sendMessage(getMessage("clan-not-war-with"));
-                    return true;
+                    return;
                 }
+
                 myClanEnd.removeWar(targetClan2);
                 targetClan2.removeWar(myClanEnd);
 
@@ -500,34 +467,32 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                                 .replace("{clan1}", clanMenu.getClanColor(myClanNameEnd) + myClanNameEnd)
                                 .replace("{clan2}", clanMenu.getClanColor(targetEndClanName) + targetEndClanName)
                 );
-
                 break;
-
             case "wardeclare":
                 if (args.length < 2) {
                     player.sendMessage("§c/pclans wardeclare <clan-name>");
-                    return true;
+                    return;
                 }
 
                 String targetClanName = args[1].toLowerCase();
-
                 if (!clans.containsKey(targetClanName)) {
                     player.sendMessage(getMessage("clan-not-found"));
-                    return true;
+                    return;
                 }
 
                 UUID playerUUID = player.getUniqueId();
                 String myClanName = playerClan.get(playerUUID);
 
-                Clan myClan = clans.get(myClanName);
-
-                if (!checkClanPermission(player, "can-declare-war")) return true;
-
+                if (!checkClanPermission(player, "can-declare-war")) {
+                    return;
+                }
 
                 Clan targetClan1 = clans.get(targetClanName);
-                if(myClan.getWars().contains(targetClan1)) {
+                Clan myClan = clans.get(myClanName);
+
+                if (myClan.getWars().contains(targetClan1)) {
                     player.sendMessage(getMessage("war-already-declared"));
-                    return true;
+                    return;
                 }
                 myClan.addWar(targetClan1);
                 targetClan1.addWar(myClan);
@@ -537,34 +502,29 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                                 .replace("{clan1}", clanMenu.getClanColor(myClanName) + myClanName)
                                 .replace("{clan2}", clanMenu.getClanColor(targetClanName) +  targetClanName)
                 );
-
                 break;
-
             case "tradecontract":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans tradecontract <clan-name>");
-                    return true;
+                    return;
                 }
 
                 String targetClanNameTrade = args[1].toLowerCase();
-
                 if (!clans.containsKey(targetClanNameTrade)) {
                     player.sendMessage(getMessage("clan-not-found"));
-                    return true;
+                    return;
                 }
 
                 UUID playerUUIDTrade = player.getUniqueId();
                 String myClanNameTrade = playerClan.get(playerUUIDTrade);
-
                 Clan myClanTrade = clans.get(myClanNameTrade);
 
-                if (!checkClanPermission(player, "can-trade-contract")) return true;
-
+                if (!checkClanPermission(player, "can-trade-contract")) return;
 
                 Clan targetClanTrade = clans.get(targetClanNameTrade);
-                if(myClanTrade.getTradecontrats().contains(targetClanTrade)) {
+                if (myClanTrade.getTradecontrats().contains(targetClanTrade)) {
                     player.sendMessage(getMessage("clan-not-trade-with"));
-                    return true;
+                    return;
                 }
                 targetClanTrade.addTradecontrat(myClanTrade);
                 myClanTrade.addTradecontrat(targetClanTrade);
@@ -574,35 +534,31 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                                 .replace( "{clan1}", clanMenu.getClanColor(myClanNameTrade) +  myClanNameTrade)
                                 .replace("{clan2}", clanMenu.getClanColor(targetClanNameTrade) + targetClanNameTrade)
                 );
-
                 break;
-
-
             case "tradecontractend":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans tradecontractend <clan-name>");
-                    return true;
+                    return;
                 }
 
                 String targetClanNameTradeEnd = args[1].toLowerCase();
-
                 if (!clans.containsKey(targetClanNameTradeEnd)) {
                     player.sendMessage(getMessage("clan-not-found"));
-                    return true;
+                    return;
                 }
 
                 UUID playerUUIDTradeEnd = player.getUniqueId();
                 String myClanNameTradeEnd = playerClan.get(playerUUIDTradeEnd);
-
                 Clan myClanTradeEnd = clans.get(myClanNameTradeEnd);
 
-                if (!checkClanPermission(player, "can-trade-end")) return true;
-
+                if (!checkClanPermission(player, "can-trade-end")) {
+                    return;
+                }
 
                 Clan targetClanTradeEnd = clans.get(targetClanNameTradeEnd);
-                if(!myClanTradeEnd.getTradecontrats().contains(targetClanTradeEnd)) {
+                if (!myClanTradeEnd.getTradecontrats().contains(targetClanTradeEnd)) {
                     player.sendMessage(getMessage("clan-not-trade-withend"));
-                    return true;
+                    return;
                 }
                 targetClanTradeEnd.removeTradecontrat(myClanTradeEnd);
                 myClanTradeEnd.removeTradecontrat(targetClanTradeEnd);
@@ -612,75 +568,196 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                                 .replace( "{clan1}",clanMenu.getClanColor(myClanNameTradeEnd) +  myClanNameTradeEnd)
                                 .replace("{clan2}", clanMenu.getClanColor(targetClanNameTradeEnd) + targetClanNameTradeEnd)
                 );
-
                 break;
-
-
             case "menu":
                 UUID playerUUIDMenu = player.getUniqueId();
                 String myClanNameMenu = playerClan.get(playerUUIDMenu);
-
                 if (myClanNameMenu == null || !clans.containsKey(myClanNameMenu)) {
                     player.sendMessage("§cВы не состоите в клане.");
-                    return true;
+                    return;
                 }
-
                 Clan clanMenu1 = clans.get(myClanNameMenu);
                 clanMenu.openClanMenu(player, clanMenu1);
-                return true;
-
-
+                break;
             case "settings":
                 UUID playerUUIDSettings = player.getUniqueId();
                 String clanNameSettings = playerClan.get(playerUUIDSettings);
-
                 Clan clanSettings = clans.get(clanNameSettings);
-
-                if (!checkClanPermission(player, "can-open-settings")) return true;
-
+                if (!checkClanPermission(player, "can-open-settings")) {
+                    return;
+                }
                 clanMenu.openSettingsMenu(player, clanSettings);
-                return true;
-
-
+                break;
             case "remove":
-                if (args.length < 2) {
+                if (args.length != 2) {
                     player.sendMessage("§c/pclans remove <clan-name>");
-                    return true;
+                    return;
                 }
                 clanName = args[1].toLowerCase();
                 if (!clans.containsKey(clanName)) {
                     player.sendMessage(getMessage("clan-not-found"));
-                    return true;
+                    return;
                 }
+
+                if (!checkClanPermission(player, "can-remove-clan")) {
+                    return;
+                }
+
                 Clan clan = clans.get(clanName);
-
-                if (!checkClanPermission(player, "can-remove-clan")) return true;
-
-                for (String member : clan.members) {
+                for (String member : clan.getMembers()) {
                     playerClan.remove(UUID.fromString(member));
                 }
                 clans.remove(clanName);
                 joinRequests.remove(clanName);
                 player.sendMessage(getMessage("clan-removed", Map.of("clan", clanName)));
-                Set<Player> players = new HashSet<>();
-                for(String uuidmember : clan.members) {
-                    players.add(Bukkit.getPlayer(UUID.fromString(uuidmember)));
-                }
-                for(Player member : players) {
-                    updatePlayerPrefix(member);
-                    updatePlayerNametag(member);
-                }
-                updatePlayerPrefix(player);
-                updatePlayerNametag(player);
+
+                clan.getMembers().stream()
+                        .map(memberUuid -> Bukkit.getPlayer(UUID.fromString(memberUuid)))
+                        .forEach(this::updatePlayerNames);
+                updatePlayerNames(player);
                 break;
-
-
-
             default:
                 player.sendMessage(getMessage("unknown-command"));
                 break;
         }
-        return true;
+    }
+
+    public void updatePlayerNames(Player player) {
+        updatePlayerChatPrefix(player);
+        updatePlayerNametag(player);
+    }
+
+    public void updatePlayerChatPrefix(Player player) {
+        String clanName = playerClan.get(player.getUniqueId());
+        String playerName;
+        if (clanName != null) {
+            ChatColor color = clanMenu.getClanColor(clanName);
+            String prefix = "§7[" + color + clanName + "§7] §r";
+            playerName = prefix + player.getName();
+        } else {
+            playerName = player.getName();
+        }
+        player.setPlayerListName(playerName);
+        player.setDisplayName(playerName);
+    }
+
+    public void updatePlayerNametag(Player player) {
+        if (mainBoard == null) return;
+
+        String clanName = playerClan.get(player.getUniqueId());
+        if (clanName != null) {
+            Team team = mainBoard.getTeam(clanName);
+            if (team == null) {
+                team = mainBoard.registerNewTeam(clanName);
+            }
+
+            ChatColor color = clanMenu.getClanColor(clanName);
+            String prefix = "§7[" + color + clanName + "§7] ";
+
+            if (prefix.length() > 16) {
+                prefix = color + clanName;
+            }
+
+            team.setPrefix(prefix);
+            team.setSuffix("");
+
+            if (!team.hasEntry(player.getName())) {
+                team.addEntry(player.getName());
+            }
+        } else {
+            // Удаляем из всех команд, если игрок больше не в клане
+//            mainBoard.getTeams().removeIf(team -> team.hasEntry(player.getName()));
+            for (Team team : mainBoard.getTeams()) {
+                if (team.hasEntry(player.getName())) {
+                    team.removeEntry(player.getName());
+                }
+            }
+        }
+        player.setScoreboard(mainBoard);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!(sender instanceof Player)) return Collections.emptyList();
+
+        Player player = (Player) sender;
+        UUID uuid = player.getUniqueId();
+
+        if (args.length == 1) {
+            return Stream.of("create", "join", "accept", "deny", "requests", "remove", "leave", "my", "menu", "settings",  "tradecontractend", "tradecontract", "wardeclare", "warend")
+                    .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
+                    .toList();
+        }
+
+        if (args.length == 2) {
+            String subcommand = args[0].toLowerCase();
+            switch (subcommand) {
+                case "accept":
+                case "deny":
+                    String clanName = playerClan.get(uuid);
+                    if (clanName != null && clans.containsKey(clanName)) {
+                        Clan clan = clans.get(clanName);
+                        if (clan.owner.equals(uuid)) {
+                            List<UUID> requests = joinRequests.getOrDefault(clanName, new ArrayList<>());
+                            return requests.stream()
+                                    .map(Bukkit::getOfflinePlayer)
+                                    .map(OfflinePlayer::getName)
+                                    .filter(Objects::nonNull)
+                                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                                    .toList();
+                        }
+                    }
+                    break;
+                case "remove":
+                    if (playerClan.get(uuid) != null) {
+                        return List.of(playerClan.get(uuid));
+                    }
+                    break;
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void onLoad() {
+        getServer().getServicesManager().register(Economy.class, new VaultHook(this), this, ServicePriority.Highest);
+        getLogger().info("VaultHook зарегистрирован в onLoad().");
+    }
+
+    public Map<String, Clan> getClans() {
+        return clans;
+    }
+
+    public Map<UUID, String> getPlayerClan() {
+        return playerClan;
+    }
+
+    public static ZlomCore_PDev getInstance() {
+        return instance;
+    }
+
+    public Economy getEconomy() {
+        return economy;
+    }
+
+    public FurnaceProtectionManager getManager() {
+        return manager;
+    }
+
+    public BalanceManager getBalanceManager() {
+        return balanceManager;
+    }
+
+    public AhBlockManager getAhBlockManager() {
+        return ahBlockManager;
+    }
+
+    public ClanMenu getClanMenu() {
+        return clanMenu;
+    }
+
+    public static ClanRoleManager getRoleManager() {
+        return roleManager;
     }
 
     private boolean checkClanPermission(Player player, String permissionKey) {
@@ -706,123 +783,6 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         return true;
     }
 
-
-    public boolean hasClanPermission(String clanName, UUID playerUUID, String permissionKey) {
-        int level = roleManager.getMemberLevel(clanName, playerUUID);
-        return roleManager.hasPermission(level, permissionKey);
-    }
-
-
-
-    public void updatePlayerPrefix(Player player) {
-        UUID uuid = player.getUniqueId();
-        String clanName = playerClan.get(uuid);
-        if (clanName != null) {
-            Clan clan = clans.get(clanName);
-            ChatColor color = clanMenu.getClanColor(clanName);
-            String prefix = "§7[" + color + clanName + "§7] §r";
-            player.setPlayerListName(prefix + player.getName());
-            player.setDisplayName(prefix + player.getName());
-        } else {
-            player.setPlayerListName(player.getName());
-            player.setDisplayName(player.getName());
-        }
-    }
-
-    public void updatePlayerNametag(Player player) {
-        if (mainBoard == null) return;
-
-        String clanName = playerClan.get(player.getUniqueId());
-        if (clanName != null) {
-            Team team = mainBoard.getTeam(clanName);
-            if (team == null) {
-                team = mainBoard.registerNewTeam(clanName);
-            }
-
-            // Получаем цвет клана из ClanMenu
-            ChatColor color = clanMenu.getClanColor(clanName);
-            String prefix = "§7[" + color + clanName + "§7] ";
-
-            if (prefix.length() > 16) {
-                // Урезаем префикс, если он длиннее допустимого
-                prefix = color + clanName;
-            }
-
-            team.setPrefix(prefix);
-            team.setSuffix("");
-
-            if (!team.hasEntry(player.getName())) {
-                team.addEntry(player.getName());
-            }
-
-        } else {
-            // Удаляем из всех команд, если игрок больше не в клане
-            for (Team team : mainBoard.getTeams()) {
-                if (team.hasEntry(player.getName())) {
-                    team.removeEntry(player.getName());
-                }
-            }
-        }
-
-        // Назначаем общий scoreboard игроку
-        player.setScoreboard(mainBoard);
-    }
-
-
-
-
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!(sender instanceof Player)) return Collections.emptyList();
-
-        Player player = (Player) sender;
-        UUID uuid = player.getUniqueId();
-
-        if (args.length == 1) {
-            return List.of("create", "join", "accept", "deny", "requests", "remove", "leave", "my", "menu", "settings",  "tradecontractend", "tradecontract", "wardeclare", "warend").stream()
-                    .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
-                    .toList();
-        }
-
-        if (args.length == 2) {
-            String subcommand = args[0].toLowerCase();
-            switch (subcommand) {
-                case "accept":
-                case "deny":
-                    String clanName = playerClan.get(uuid);
-                    if (clanName != null && clans.containsKey(clanName)) {
-                        Clan clan = clans.get(clanName);
-                        if (clan.owner.equals(uuid)) {
-                            List<UUID> requests = joinRequests.getOrDefault(clanName, new ArrayList<>());
-                            return requests.stream()
-                                    .map(Bukkit::getOfflinePlayer)
-                                    .map(OfflinePlayer::getName)
-                                    .filter(Objects::nonNull)
-                                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                                    .toList();
-                        }
-                    }
-                    break;
-
-                case "remove":
-                    if (playerClan.get(uuid) != null) {
-                        return List.of(playerClan.get(uuid));
-                    }
-                    break;
-            }
-        }
-
-        return Collections.emptyList();
-    }
-    public Map<String, Clan> getClans() {
-        return clans;
-    }
-
-    public Map<UUID, String> getPlayerClan() {
-        return playerClan;
-    }
-
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp =
                 getServer().getServicesManager().getRegistration(Economy.class);
@@ -830,34 +790,6 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
             return false;
         }
         economy = rsp.getProvider();
-        return economy != null;
+        return true;
     }
-
-    public static ZlomCore_PDev getInstance() {
-        return instance;
-    }
-
-    public Economy getEconomy() {
-        return economy;
-    }
-
-    public FurnaceProtectionManager getManager() {
-        return manager;
-    }
-
-    @Override
-    public void onLoad() {
-        getServer().getServicesManager().register(Economy.class, new VaultHook(this), this, ServicePriority.Highest);
-        getLogger().info("VaultHook зарегистрирован в onLoad().");
-    }
-
-    public BalanceManager getBalanceManager() {
-        return balanceManager;
-    }
-
-    public AhBlockManager getAhBlockManager() {
-        return ahBlockManager;
-    }
-
-
 }

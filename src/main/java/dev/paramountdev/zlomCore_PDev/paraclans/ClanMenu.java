@@ -3,35 +3,46 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.ProtectionRegion;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.inventory.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class    ClanMenu implements Listener {
+import static dev.paramountdev.zlomCore_PDev.ZlomCore_PDev.getRoleManager;
 
-    private final Map<UUID, List<Location>> clanPrivates = new HashMap<>();
+public class ClanMenu implements Listener {
+
     private final Map<String, Boolean> clanPvpEnabled = new HashMap<>();
     private final Map<String, ChatColor> clanPrefixColor = new HashMap<>();
     private final Map<UUID, Boolean> renameWaiting = new HashMap<>();
+    private final ZlomCore_PDev plugin;
 
     private final List<ChatColor> prefixColors = Arrays.asList(
             ChatColor.AQUA, ChatColor.YELLOW, ChatColor.RED,
             ChatColor.BLUE, ChatColor.LIGHT_PURPLE, ChatColor.GREEN
     );
-
-
-    private final ZlomCore_PDev plugin;
 
     public ClanMenu(ZlomCore_PDev plugin) {
         this.plugin = plugin;
@@ -71,8 +82,6 @@ public class    ClanMenu implements Listener {
 
         // Враждующие кланы
         ItemStack war = new ItemStack(Material.RED_DYE);
-        ItemMeta warMeta = war.getItemMeta();
-        warMeta.setDisplayName(ChatColor.RED + "Враждующие кланы");
         List<String> warLore = new ArrayList<>();
         if (clan.getWars().isEmpty()) {
             warLore.add(ChatColor.GRAY + "Нет враждующих кланов");
@@ -81,6 +90,8 @@ public class    ClanMenu implements Listener {
                 warLore.add(ChatColor.GRAY + enemy.getName());
             }
         }
+        ItemMeta warMeta = war.getItemMeta();
+        warMeta.setDisplayName(ChatColor.RED + "Враждующие кланы");
         warMeta.setLore(warLore);
         war.setItemMeta(warMeta);
         inv.setItem(14, war);
@@ -116,7 +127,6 @@ public class    ClanMenu implements Listener {
         clanList.setItemMeta(clanListMeta);
         inv.setItem(4, clanList);
 
-
         player.openInventory(inv);
     }
 
@@ -137,22 +147,21 @@ public class    ClanMenu implements Listener {
                 meta.setDisplayName("§e" + member.getName());
 
                 if (isOwner && !uuid.equals(viewer.getUniqueId())) {
-                    int level = plugin.getRoleManager().getMemberLevel(clan.getName(), uuid);
-                    Integer next = plugin.getRoleManager().getNextLevel(level);
-                    Integer prev = plugin.getRoleManager().getPreviousLevel(level);
+                    int level = getRoleManager().getMemberLevel(clan.getName(), uuid);
+                    Integer next = getRoleManager().getNextLevel(level);
+                    Integer prev = getRoleManager().getPreviousLevel(level);
 
                     List<String> lore = new ArrayList<>();
                     if (prev != null) {
-                        String name = plugin.getRoleManager().getRole(prev).getName();
+                        String name = getRoleManager().getRole(prev).getName();
                         lore.add("§7ЛКМ - понизить до §c" + name);
                     }
                     if (next != null) {
-                        String name = plugin.getRoleManager().getRole(next).getName();
+                        String name = getRoleManager().getRole(next).getName();
                         lore.add("§7ПКМ - повысить до §a" + name);
                     }
                     meta.setLore(lore);
                 }
-
                 skull.setItemMeta(meta);
                 inv.setItem(index++, skull);
             } catch (IllegalArgumentException ex) {
@@ -164,15 +173,14 @@ public class    ClanMenu implements Listener {
         viewer.openInventory(inv);
     }
 
-
-
     @EventHandler
     public void onClanMenuClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
 
+        Player player = (Player) event.getWhoClicked();
         String title = ChatColor.stripColor(event.getView().getTitle());
-        if (!title.equalsIgnoreCase("Меню клана") && !title.equalsIgnoreCase("Участники клана")) return;
+        if (!title.equalsIgnoreCase("Меню клана")
+                && !title.equalsIgnoreCase("Участники клана")) return;
 
         event.setCancelled(true);
 
@@ -205,33 +213,30 @@ public class    ClanMenu implements Listener {
                 UUID targetUuid = target.getUniqueId();
                 if (targetUuid.equals(player.getUniqueId())) return; // нельзя менять себе уровень
 
-                int currentLevel = plugin.getRoleManager().getMemberLevel(clan.getName(), targetUuid);
+                int currentLevel = getRoleManager().getMemberLevel(clan.getName(), targetUuid);
 
                 if (event.getClick() == ClickType.LEFT) {
-                    Integer newLevel = plugin.getRoleManager().getPreviousLevel(currentLevel);
+                    Integer newLevel = getRoleManager().getPreviousLevel(currentLevel);
                     if (newLevel != null) {
-                        plugin.getRoleManager().setMemberLevel(clan.getName(), targetUuid, newLevel);
+                        getRoleManager().setMemberLevel(clan.getName(), targetUuid, newLevel);
                         player.sendMessage("§eИгрок §6" + target.getName() + " §eпонижен до §c" +
-                                plugin.getRoleManager().getRole(newLevel).getName());
+                                getRoleManager().getRole(newLevel).getName());
                         openClanMembersMenu(player, clan);
                     }
                 } else if (event.getClick() == ClickType.RIGHT) {
-                    Integer newLevel = plugin.getRoleManager().getNextLevel(currentLevel);
+                    Integer newLevel = getRoleManager().getNextLevel(currentLevel);
                     if (newLevel != null) {
-                        plugin.getRoleManager().setMemberLevel(clan.getName(), targetUuid, newLevel);
+                        getRoleManager().setMemberLevel(clan.getName(), targetUuid, newLevel);
                         player.sendMessage("§eИгрок §6" + target.getName() + " §eповышен до §a" +
-                                plugin.getRoleManager().getRole(newLevel).getName());
+                                getRoleManager().getRole(newLevel).getName());
                         openClanMembersMenu(player, clan);
                     }
                 }
                 break;
 
             case RED_DYE:
-                event.setCancelled(true);
-                break;
             case GREEN_DYE:
                 event.setCancelled(true);
-                break;
         }
     }
 
@@ -310,54 +315,51 @@ public class    ClanMenu implements Listener {
         }
     }
 
-
     public void openClanRegionsMenu(Player viewer, Clan clan) {
         Inventory inv = Bukkit.createInventory(null, 54, "§6Приваты соклановцев");
         int index = 0;
-        if (Bukkit.getPluginManager().isPluginEnabled("FurnacePrivate_PDev")) {
-            FurnaceProtectionManager fpm = FurnaceProtectionManager.getFpm();
-            if (fpm == null) {
-                viewer.sendMessage(ChatColor.RED + "Не удалось загрузить данные приватов.");
-                return;
-            }
+        FurnaceProtectionManager fpm = FurnaceProtectionManager.getFpm();
+        if (fpm == null) {
+            viewer.sendMessage(ChatColor.RED + "Не удалось загрузить данные приватов.");
+            return;
+        }
 
-            // Преобразуем список участников в UUID
-            Set<UUID> clanMembers = clan.getMembers().stream()
-                    .map(UUID::fromString)
-                    .collect(Collectors.toSet());
+        // Преобразуем список участников в UUID
+        Set<UUID> clanMembers = clan.getMembers().stream()
+                .map(UUID::fromString)
+                .collect(Collectors.toSet());
 
-            // Для каждого региона на сервере проверяем, принадлежит ли он соклановцу
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                for (ProtectionRegion region : fpm.getRegionsFor(player.getUniqueId())) {
-                    UUID ownerUUID = region.getOwner();
+        // Для каждого региона на сервере проверяем, принадлежит ли он соклановцу
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            for (ProtectionRegion region : fpm.getRegionsFor(player.getUniqueId())) {
+                UUID ownerUUID = region.getOwner();
 
-                    // Только если владелец региона — член текущего клана
-                    if (clanMembers.contains(ownerUUID)) {
-                        OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerUUID);
-                        Location loc = region.getCenter();
+                // Только если владелец региона — член текущего клана
+                if (clanMembers.contains(ownerUUID)) {
+                    OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerUUID);
+                    Location loc = region.getCenter();
 
-                        ItemStack furnace = new ItemStack(Material.BLAST_FURNACE);
-                        ItemMeta meta = furnace.getItemMeta();
-                        meta.setDisplayName("§eРегион - " + owner.getName());
-                        meta.setLore(Arrays.asList(
-                                "§7X: " + loc.getBlockX(),
-                                "§7Y: " + loc.getBlockY(),
-                                "§7Z: " + loc.getBlockZ()
-                        ));
+                    ItemStack furnace = new ItemStack(Material.BLAST_FURNACE);
+                    ItemMeta meta = furnace.getItemMeta();
+                    meta.setDisplayName("§eРегион - " + owner.getName());
+                    meta.setLore(Arrays.asList(
+                            "§7X: " + loc.getBlockX(),
+                            "§7Y: " + loc.getBlockY(),
+                            "§7Z: " + loc.getBlockZ()
+                    ));
 
-                        furnace.setItemMeta(meta);
-                        inv.setItem(index++, furnace);
+                    furnace.setItemMeta(meta);
+                    inv.setItem(index++, furnace);
 
-                        if (index >= 54) break; // инвентарь заполнен
-                    }
+                    if (index >= 54) break; // инвентарь заполнен
                 }
             }
+
             inv.setItem(53, getBackButton());
 
             viewer.openInventory(inv);
         }
     }
-
 
     public void openSettingsMenu(Player player, Clan clan) {
         Inventory inv = Bukkit.createInventory(null, 27, "§8Настройки клана");
@@ -447,16 +449,16 @@ public class    ClanMenu implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent e) {
-        if (!(e.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) e.getWhoClicked();
-        String title = e.getView().getTitle();
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
+        String title = event.getView().getTitle();
 
         if (!title.equals("§8Настройки клана")) return;
 
-        e.setCancelled(true);
+        event.setCancelled(true);
 
-        ItemStack clicked = e.getCurrentItem();
+        ItemStack clicked = event.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
 
         String clanName = plugin.getPlayerClan().get(player.getUniqueId());
@@ -464,32 +466,29 @@ public class    ClanMenu implements Listener {
         if (clan == null) return;
 
         Material type = clicked.getType();
-
         if (type == Material.LEVER || type == Material.REDSTONE_TORCH) {
             boolean current = clanPvpEnabled.getOrDefault(clan.getName(), true);
             clanPvpEnabled.put(clan.getName(), !current);
             player.sendMessage("§aPvP между участниками клана теперь " + (!current ? "§aвключено" : "§cзапрещено"));
-            openSettingsMenu(player, clan); // Перерисовать меню
+            openSettingsMenu(player, clan);
         } else if (type.name().endsWith("_DYE")) {
             ChatColor current = clanPrefixColor.getOrDefault(clan.getName(), ChatColor.AQUA);
             int nextIndex = (prefixColors.indexOf(current) + 1) % prefixColors.size();
-            ChatColor next = prefixColors.get(nextIndex);
-            clanPrefixColor.put(clan.getName(), next);
-            player.sendMessage("§aЦвет префикса изменён на " + next + next.name());
+            ChatColor nextColor = prefixColors.get(nextIndex);
+            clanPrefixColor.put(clan.getName(), nextColor);
+            player.sendMessage("§aЦвет префикса изменён на " + nextColor + nextColor.name());
             // Обновить всем участникам префикс
             for (String uuid : clan.getMembers()) {
                 Player p = Bukkit.getPlayer(UUID.fromString(uuid));
                 if (p != null) {
-                    plugin.updatePlayerPrefix(p);
-                    plugin.updatePlayerNametag(p);
+                    plugin.updatePlayerNames(p);
                 }
             }
-            plugin.updatePlayerNametag(player);
-            plugin.updatePlayerPrefix(player);
+            plugin.updatePlayerNames(player);
 
             openSettingsMenu(player, clan);
         } else if (type == Material.OAK_SIGN) {
-            if (clan.getOwner().equals(player.getUniqueId())) {
+            if (!clan.getOwner().equals(player.getUniqueId())) {
                 player.sendMessage("§cТолько владелец может изменить название клана.");
                 return;
             }
@@ -520,14 +519,12 @@ public class    ClanMenu implements Listener {
         player.sendMessage("§aИмя клана успешно изменено на §e" + newName);
         renameWaiting.remove(uuid);
 
-        // Обновить префиксы
         for (String memberUUID : oldClan.getMembers()) {
             UUID memberId = UUID.fromString(memberUUID);
-            plugin.getPlayerClan().put(memberId, newName.toLowerCase()); // << ОБЯЗАТЕЛЬНО
+            plugin.getPlayerClan().put(memberId, newName.toLowerCase());
             Player p = Bukkit.getPlayer(memberId);
             if (p != null) {
-                plugin.updatePlayerPrefix(p);
-                plugin.updatePlayerNametag(p);
+                plugin.updatePlayerNames(p);
             }
         }
     }

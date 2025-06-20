@@ -15,8 +15,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        plugin.updatePlayerPrefix(event.getPlayer());
-        plugin.updatePlayerNametag(event.getPlayer());
+        plugin.updatePlayerNames(event.getPlayer());
     }
 }
 

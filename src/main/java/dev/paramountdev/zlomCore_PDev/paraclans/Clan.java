@@ -15,6 +15,7 @@ public class Clan {
     public UUID owner;
     public Set<String> members;
     public List<Clan> wars = new ArrayList<>();
+    List<Clan> tradecontrats = new ArrayList<>();
 
     public Clan(String name, UUID owner, Set<String> members, List<Clan> wars, List<Clan> tradecontrats) {
         this.name = name;
@@ -24,20 +25,10 @@ public class Clan {
         this.tradecontrats = tradecontrats;
     }
 
-    public List<Clan> getTradecontrats() {
-        return tradecontrats;
-    }
-
-    List<Clan> tradecontrats = new ArrayList<>();
-
     public Clan(String name, UUID owner, Set<String> members) {
         this.name = name;
         this.owner = owner;
         this.members = members;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public void setName(String newName, Player player) {
@@ -52,13 +43,32 @@ public class Clan {
         plugin.clans.remove(this.getName());
         plugin.clans.put(newName, newClan);
 
-
         // Обновление карты playerClan
         plugin.playerClan.remove(this.getOwner());
         plugin.playerClan.put(player.getUniqueId(), newName);
 
         // Обновление имени
         this.name = newName;
+    }
+
+    public void addTradecontrat(Clan tradecontrat) {
+        this.tradecontrats.add(tradecontrat);
+    }
+
+    public void removeTradecontrat(Clan tradecontrat) {
+        this.tradecontrats.remove(tradecontrat);
+    }
+
+    public void addWar(Clan war) {
+        this.wars.add(war);
+    }
+
+    public void removeWar(Clan war) {
+        this.wars.remove(war);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public UUID getOwner() {
@@ -85,19 +95,7 @@ public class Clan {
         this.wars = wars;
     }
 
-    public void addWar(Clan war) {
-        this.wars.add(war);
+    public List<Clan> getTradecontrats() {
+        return tradecontrats;
     }
-    public void removeWar(Clan war) {
-        this.wars.remove(war);
-    }
-
-    public void addTradecontrat(Clan tradecontrat) {
-        this.tradecontrats.add(tradecontrat);
-    }
-    public void removeTradecontrat(Clan tradecontrat) {
-        this.tradecontrats.remove(tradecontrat);
-    }
-
-
 }

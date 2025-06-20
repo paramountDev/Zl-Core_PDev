@@ -23,12 +23,12 @@ public class BoostConnector implements Listener, CommandExecutor {
     private final Map<UUID, Integer> customLimits = new HashMap<>();
     private final Map<UUID, List<PendingPayment>> pendingPayments = new HashMap<>();
     private final Map<UUID, Integer> playerSlots = new HashMap<>();
+    private final Economy economy = ZlomCore_PDev.getInstance().getEconomy();
 
     private int defaultLimit;
     private String successMessage;
     private String denyMessage;
 
-    private Economy economy = ZlomCore_PDev.getInstance().getEconomy();
 
     public void loadSettings() {
         FileConfiguration config = ZlomCore_PDev.getInstance().getConfig();
