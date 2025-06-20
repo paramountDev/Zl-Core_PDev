@@ -1,5 +1,6 @@
 package dev.paramountdev.zlomCore_PDev.paraclans;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.ProtectionRegion;
@@ -30,6 +31,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static dev.paramountdev.zlomCore_PDev.ZlomCoreHelper.getItemStack;
+import static dev.paramountdev.zlomCore_PDev.ZlomCoreHelper.updatePlayerNames;
 import static dev.paramountdev.zlomCore_PDev.ZlomCore_PDev.getRoleManager;
 
 public class ClanMenu implements Listener {
@@ -481,10 +484,10 @@ public class ClanMenu implements Listener {
             for (String uuid : clan.getMembers()) {
                 Player p = Bukkit.getPlayer(UUID.fromString(uuid));
                 if (p != null) {
-                    plugin.updatePlayerNames(p);
+                    updatePlayerNames(p, plugin.getPlayerClan(), plugin.getClanMenu(), plugin.getMainBoard());
                 }
             }
-            plugin.updatePlayerNames(player);
+            updatePlayerNames(player, plugin.getPlayerClan(), plugin.getClanMenu(), plugin.getMainBoard());
 
             openSettingsMenu(player, clan);
         } else if (type == Material.OAK_SIGN) {
@@ -524,7 +527,7 @@ public class ClanMenu implements Listener {
             plugin.getPlayerClan().put(memberId, newName.toLowerCase());
             Player p = Bukkit.getPlayer(memberId);
             if (p != null) {
-                plugin.updatePlayerNames(p);
+                updatePlayerNames(p, plugin.getPlayerClan(), plugin.getClanMenu(), plugin.getMainBoard());
             }
         }
     }
@@ -553,12 +556,13 @@ public class ClanMenu implements Listener {
     }
 
     private ItemStack getBackButton() {
-        ItemStack back = new ItemStack(Material.PRISMARINE_SHARD);
-        ItemMeta meta = back.getItemMeta();
-        meta.setDisplayName(ChatColor.GRAY + "Назад");
-        meta.setLore(Collections.singletonList(ChatColor.DARK_GRAY + "Вернуться в главное меню"));
-        back.setItemMeta(meta);
-        return back;
+        return getItemStack(
+                Material.PRISMARINE_SHARD,
+                "Назад",
+                ChatColor.GRAY,
+                "Вернуться в главное меню",
+                ChatColor.DARK_GRAY
+        );
     }
 }
 
