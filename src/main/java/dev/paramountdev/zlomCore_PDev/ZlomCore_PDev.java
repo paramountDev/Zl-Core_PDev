@@ -34,6 +34,7 @@ import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +45,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Stream;
+
+import static dev.paramountdev.zlomCore_PDev.ZlomCoreHelper.getMessage;
+import static dev.paramountdev.zlomCore_PDev.ZlomCoreHelper.updatePlayerNames;
 
 public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabCompleter {
 
@@ -228,6 +232,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         if (args.length < 1) {
             return;
         }
+        if (!playerClan.containsKey(player.getUniqueId())) {
+            clanMenu.openCreateMenu(player);
+            return;
+        }
 
         PclanCommandType.proccessCommand(
                 sender,
@@ -252,7 +260,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         UUID uuid = player.getUniqueId();
 
         if (args.length == 1) {
-            return Stream.of("create", "join", "accept", "deny", "requests", "remove", "leave", "my", "menu", "settings",  "tradecontractend", "tradecontract", "wardeclare", "warend")
+            return Stream.of("create", "join", "accept", "deny", "requests", "remove", "leave", "my", "menu", "settings", "tradecontractend", "tradecontract", "wardeclare", "warend")
                     .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
                     .toList();
         }
@@ -290,6 +298,65 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     public void onLoad() {
         getServer().getServicesManager().register(Economy.class, new VaultHook(this), this, ServicePriority.Highest);
         getLogger().info("VaultHook зарегистрирован в onLoad().");
+    }
+
+    public void addPlayerToClan(Player player, String clanName) {
+        if (playerClan.containsKey(player.getUniqueId())) {
+            player.sendMessage(getMessage("already-in-clan"));
+            return;
+        }
+        Clan targetClan = clans.get(clanName);
+        if (targetClan == null) {
+            player.sendMessage(getMessage("clan-not-found"));
+            return;
+        }
+        if (targetClan.getMembers().size() >= config.getInt("max-members", 10)) {
+            player.sendMessage(getMessage("clan-full"));
+            return;
+        }
+        joinRequests.computeIfAbsent(clanName, k -> new ArrayList<>()).add(player.getUniqueId());
+        Player owner = Bukkit.getPlayer(targetClan.getOwner());
+        if (owner != null) {
+            owner.sendMessage("§eИгрок \"" + player.getName() + "\" хочет вступить в ваш клан. Используйте /pclans accept " + player.getName() + " или /pclans deny " + player.getName());
+        }
+        player.sendMessage(getMessage("clan-joined-request"));
+    }
+
+    public void createClan(Player player, String clanName) {
+
+        UUID playerId = player.getUniqueId();
+
+        if (playerClan.containsKey(playerId)) {
+            player.sendMessage(getMessage("already-in-clan"));
+            return;
+        }
+
+        if (clans.containsKey(clanName)) {
+            player.sendMessage(getMessage("clan-exists"));
+            return;
+        }
+
+        List<String> blacklist = config.getStringList("blacklist");
+        if (blacklist.contains(clanName)) {
+            player.sendMessage(getMessage("clan-name-blacklisted"));
+            return;
+        }
+
+        double price = config.getDouble("create-price", 0.0);
+        if (price > 0.0) {
+            if (!economy.has(player, price)) {
+                player.sendMessage(getMessage("not-enough-money", Map.of("price", String.valueOf(price))));
+                return;
+            }
+            economy.withdrawPlayer(player, price);
+            player.sendMessage(getMessage("money-withdrawn", Map.of("price", String.valueOf(price))));
+        }
+
+        Clan newClan = new Clan(clanName, playerId, new HashSet<>(List.of(playerId.toString())));
+        clans.put(clanName, newClan);
+        playerClan.put(playerId, clanName);
+        player.sendMessage(getMessage("clan-created", Map.of("clan", clanName)));
+        updatePlayerNames(player, playerClan, clanMenu, mainBoard);
     }
 
     public Map<String, Clan> getClans() {

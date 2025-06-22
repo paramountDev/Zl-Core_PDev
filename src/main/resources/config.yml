@@ -75,6 +75,8 @@ blacklist:
   - helper
   - staff
   - test
+  - "Имя клана"
+  - "имя клана"
 
 
 

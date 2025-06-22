@@ -57,7 +57,14 @@ public enum PclanCommandType {
     ) {
         String action = args[0];
         UUID playerId = player.getUniqueId();
-        PclanCommandType type = PclanCommandType.valueOf(action.toUpperCase());
+        PclanCommandType type;
+
+        try {
+            type = PclanCommandType.valueOf(action.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            player.sendMessage(getMessage("unknown-command"));
+            return;
+        }
 
         String targetName;
         OfflinePlayer targetPlayer;
@@ -436,7 +443,7 @@ public enum PclanCommandType {
                     return;
                 }
                 Clan clanMenu1 = clans.get(myClanNameMenu);
-                clanMenu.openClanMenu(player, clanMenu1);
+                clanMenu.openMainClanMenu(player, clanMenu1);
                 break;
             case SETTINGS:
                 UUID playerUUIDSettings = player.getUniqueId();

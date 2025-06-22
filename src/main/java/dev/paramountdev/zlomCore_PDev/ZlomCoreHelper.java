@@ -1,18 +1,24 @@
 package dev.paramountdev.zlomCore_PDev;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,19 +52,67 @@ public final class ZlomCoreHelper {
         return itemStack;
     }
 
+    public static ItemStack createPlusHead(String name, List<String> lore) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(lore);
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+        profile.getProperties().add(new ProfileProperty("textures",
+                "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWZmMzE0MzFkNjQ1ODdmZjZlZjk4YzA2NzU4MTA2ODFmOGMxM2JmOTZmNTFkOWNiMDdlZDc4NTJiMmZmZDEifX19"));
+        meta.setPlayerProfile(profile);
+        skull.setItemMeta(meta);
+        return skull;
+    }
+
+    public static ItemStack createMinusHead(String name, List<String> lore) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(lore);
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+        profile.getProperties().add(new ProfileProperty("textures",
+                "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGU0YjhiOGQyMzYyYzg2NGUwNjIzMDE0ODdkOTRkMzI3MmE2YjU3MGFmYmY4MGMyYzViMTQ4Yzk1NDU3OWQ0NiJ9fX0="));
+        meta.setPlayerProfile(profile);
+        skull.setItemMeta(meta);
+        return skull;
+    }
+
+    public static ItemStack createCastleHead(String name, List<String> lore) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(lore);
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+        profile.getProperties().add(new ProfileProperty("textures",
+                "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVlZjdlNTZjZGU3NDA3NzJkZmI3NmRkZDJmNTg0YmU4OTA3Yjg1OTc2NjhlNDAyNjM0OTg2NDY5MjMwYWE0OSJ9fX0="));
+        meta.setPlayerProfile(profile);
+        skull.setItemMeta(meta);
+        return skull;
+    }
+
+
+    public static ItemStack createFiller() {
+        ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.setDisplayName(" ");
+        filler.setItemMeta(fillerMeta);
+        return filler;
+    }
+
     public static void updatePlayerNames(Player player,
-                                   Map<UUID, String> playerClan,
-                                   ClanMenu clanMenu,
-                                   Scoreboard mainBoard) {
+                                         Map<UUID, String> playerClan,
+                                         ClanMenu clanMenu,
+                                         Scoreboard mainBoard) {
         updatePlayerChatPrefix(player, playerClan, clanMenu, mainBoard);
         updatePlayerNametag(player, playerClan, clanMenu, mainBoard);
     }
 
     public static void updatePlayerChatPrefix(Player player,
-                                       Map<UUID, String> playerClan,
-                                       ClanMenu clanMenu,
-                                       Scoreboard mainBoard
-                                       ) {
+                                              Map<UUID, String> playerClan,
+                                              ClanMenu clanMenu,
+                                              Scoreboard mainBoard
+    ) {
         String clanName = playerClan.get(player.getUniqueId());
         String playerName;
         if (clanName != null) {
@@ -73,10 +127,10 @@ public final class ZlomCoreHelper {
     }
 
     public static void updatePlayerNametag(Player player,
-                                    Map<UUID, String> playerClan,
-                                    ClanMenu clanMenu,
-                                    Scoreboard mainBoard
-                                    ) {
+                                           Map<UUID, String> playerClan,
+                                           ClanMenu clanMenu,
+                                           Scoreboard mainBoard
+    ) {
         if (mainBoard == null) return;
 
         String clanName = playerClan.get(player.getUniqueId());
@@ -136,4 +190,6 @@ public final class ZlomCoreHelper {
         }
         return true;
     }
+
+
 }
