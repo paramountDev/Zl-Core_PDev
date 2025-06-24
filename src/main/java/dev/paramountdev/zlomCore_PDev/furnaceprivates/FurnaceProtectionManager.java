@@ -1,5 +1,8 @@
 package dev.paramountdev.zlomCore_PDev.furnaceprivates;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
+import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
+import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlastFurnace;
@@ -15,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.FurnaceInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +26,7 @@ import java.util.*;
 
 public class FurnaceProtectionManager implements Listener {
 
-    private final Plugin plugin;
+    private final ZlomCore_PDev plugin;
     private final Map<Location, ProtectionRegion> protections = new HashMap<>();
     private final Map<Material, Integer> itemValue;
     private final int burnMultiplier;
@@ -30,6 +34,9 @@ public class FurnaceProtectionManager implements Listener {
     private File dataFilePath;
     private final Set<UUID> processingPlayers = new HashSet<>();
     private final boolean adminBypass;
+    private final Map<UUID, String> playerClan;
+    private final Map<Location, ProtectionRegion> archivedProtections = new HashMap<>();
+
 
     public static FurnaceProtectionManager getFpm() {
         return fpm;
@@ -37,10 +44,11 @@ public class FurnaceProtectionManager implements Listener {
 
     private static FurnaceProtectionManager fpm;
 
-    public FurnaceProtectionManager(Plugin plugin) {
+    public FurnaceProtectionManager(ZlomCore_PDev plugin) {
         this.plugin = plugin;
         this.adminBypass = plugin.getConfig().getBoolean("admin_bypass", true);
         this.itemValue = new HashMap<>();
+        this.playerClan = plugin.getPlayerClan();
         ConfigurationSection itemsSection = plugin.getConfig().getConfigurationSection("items");
         if (itemsSection != null) {
             itemsSection.getValues(false).forEach((key, val) ->
@@ -89,6 +97,7 @@ public class FurnaceProtectionManager implements Listener {
 
                 if (fuelItem == null || fuelItem.getType() != Material.COAL) {
                     iterator.remove();
+                    archivedProtections.put(loc, region);
                     for(Player player : Bukkit.getOnlinePlayers()) {
                         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
                     }
@@ -172,6 +181,7 @@ public class FurnaceProtectionManager implements Listener {
             // Только если владелец сам забрал предмет
             if (region.getOwner().equals(player.getUniqueId())) {
                 protections.remove(loc);
+                archivedProtections.put(loc, region);
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_FALL, 1f, 1f);
                 player.sendMessage(ChatColor.RED + "Приват удалён — вы забрали все предметы из печки.");
             }
@@ -184,6 +194,15 @@ public class FurnaceProtectionManager implements Listener {
             int addedSize = itemValue.get(input.getType());
             int inputAmount = input.getAmount();
 
+            UUID playerId = player.getUniqueId();
+            if (!playerClan.containsKey(playerId)) {
+                player.sendMessage(ChatColor.RED + "Вы должны участвовать в клане, чтобы использовать приватную печку!");
+                event.getInventory().clear(0); // убираем предметы, чтобы не потерялись
+                player.getInventory().addItem(input); // возвращаем предметы игроку
+                return;
+            }
+
+
             if (!protections.containsKey(loc)) {
                 ProtectionRegion region = new ProtectionRegion(player.getUniqueId(), loc);
                 int newSize = addedSize * inputAmount;
@@ -191,6 +210,7 @@ public class FurnaceProtectionManager implements Listener {
                 region.setLastInputAmount(inputAmount);
                 protections.put(loc, region);
                 player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
+                showProtectionBorder(region, 7);
                 player.sendMessage(ChatColor.GREEN + "Приват успешно создан на " +
                         loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
             } else {
@@ -201,6 +221,7 @@ public class FurnaceProtectionManager implements Listener {
                         region.setSize(newSize);
                         region.setLastInputAmount(inputAmount);
                         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1f, 1f);
+                        showProtectionBorder(region, 5);
                         player.sendMessage(ChatColor.YELLOW + "Приватная зона обновлена.");
                     }
                 }
@@ -310,6 +331,69 @@ public class FurnaceProtectionManager implements Listener {
                 .filter(region -> region.getOwner().equals(uuid))
                 .toList();
     }
+
+    public void showProtectionBorder(ProtectionRegion region, int durationSeconds) {
+        Location center = region.getCenter();
+        int radius = region.getSize();
+        World world = center.getWorld();
+        if (world == null) return;
+
+        int x0 = center.getBlockX();
+        int y = center.getBlockY();
+        int z0 = center.getBlockZ();
+
+        Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.5f);
+        double yOffset = 1;
+
+        int intervalTicks = 5; // каждые 5 тиков (0.25 сек)
+        int maxTicks = durationSeconds * 20;
+
+        new BukkitRunnable() {
+            int elapsed = 0;
+
+            @Override
+            public void run() {
+                if (elapsed >= maxTicks) {
+                    cancel();
+                    return;
+                }
+
+                for (int i = -radius; i <= radius; i++) {
+                    spawnParticle(world, x0 + i, y, z0 - radius, yOffset, redDust);
+                    spawnParticle(world, x0 + i, y, z0 + radius, yOffset, redDust);
+                    spawnParticle(world, x0 - radius, y, z0 + i, yOffset, redDust);
+                    spawnParticle(world, x0 + radius, y, z0 + i, yOffset, redDust);
+                }
+
+                elapsed += intervalTicks;
+            }
+        }.runTaskTimer(plugin, 0L, intervalTicks);
+    }
+
+    private void spawnParticle(World world, int x, int y, int z, double yOffset, Particle.DustOptions dust) {
+        Location loc = new Location(world, x + 0.5, y + yOffset, z + 0.5);
+        world.spawnParticle(Particle.DUST, loc, 5, 0, 0, 0, 0, dust);
+    }
+
+    public List<ProtectionRegion> getRegionsForClanMembersIncludingArchived(Set<UUID> clanMembers) {
+        Map<Location, ProtectionRegion> result = new HashMap<>();
+
+        for (ProtectionRegion region : archivedProtections.values()) {
+            if (clanMembers.contains(region.getOwner())) {
+                result.put(region.getCenter(), region);
+            }
+        }
+
+        for (ProtectionRegion region : protections.values()) {
+            if (clanMembers.contains(region.getOwner())) {
+                result.put(region.getCenter(), region);
+            }
+        }
+
+        return new ArrayList<>(result.values());
+    }
+
+
 
 }
 

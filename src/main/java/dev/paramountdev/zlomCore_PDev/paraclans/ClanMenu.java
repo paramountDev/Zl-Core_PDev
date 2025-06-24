@@ -11,6 +11,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
+import org.bukkit.block.BlastFurnace;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +22,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.FurnaceInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFlag;
@@ -243,21 +247,17 @@ public class ClanMenu implements Listener {
                 List.of(ChatColor.GREEN + "Нажмите, что бы пригласить своих друзей вступить в клан!"));
         inv.setItem(1, invite);
 
-        ItemStack roles = getItemStack(Material.TRIAL_KEY, "Роли",
-                ChatColor.DARK_GRAY, "Нажмите, что бы посмотреть и настроить роли клана.", ChatColor.GRAY);
-        inv.setItem(9, roles);
-
         ItemStack privates = createCastleHead(ChatColor.GOLD + "Приваты клана",
                 List.of(ChatColor.DARK_RED + "Посмотреть текущие и активные приваты клана."));
-        inv.setItem(18, privates);
+        inv.setItem(9, privates);
 
-        ItemStack occupation = getItemStack(Material.PODZOL, "Оккупация",
+        ItemStack occupation = getItemStack(Material.PODZOL, "Битвы",
                 ChatColor.DARK_GRAY, "Нажмите, что бы посмотреть текущие захваченные територии вражеских кланов.", ChatColor.GRAY);
-        inv.setItem(27, occupation);
+        inv.setItem(18, occupation);
 
         ItemStack lvl = getItemStack(Material.EXPERIENCE_BOTTLE, "Уровень клана",
                 ChatColor.AQUA, "Текущий уровень клана: УРОВЕНЬ", ChatColor.GREEN);
-        inv.setItem(36, lvl);
+        inv.setItem(27, lvl);
 
         ItemStack top = getItemStack(Material.GOLD_BLOCK, "Топ кланов",
                 ChatColor.YELLOW, "Самые популярные и топовые кланы на данный момент.", ChatColor.BLUE);
@@ -323,10 +323,6 @@ public class ClanMenu implements Listener {
                 if (clicked.getItemMeta().getDisplayName().contains("Приваты клана")) {
                     openRegionsMenu(player, clan);
                 }
-                break;
-
-            case TRIAL_KEY:
-                player.sendMessage("Вы нажали на Создание Роли, эта функция будет доступна в следующем обновлении");
                 break;
 
             case PODZOL:
@@ -490,36 +486,39 @@ public class ClanMenu implements Listener {
                 .map(UUID::fromString)
                 .collect(Collectors.toSet());
 
-        // Для каждого региона на сервере проверяем, принадлежит ли он соклановцу
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            for (ProtectionRegion region : fpm.getRegionsFor(player.getUniqueId())) {
-                UUID ownerUUID = region.getOwner();
+        List<ProtectionRegion> allRegions = fpm.getRegionsForClanMembersIncludingArchived(clanMembers);
 
-                // Только если владелец региона — член текущего клана
-                if (clanMembers.contains(ownerUUID)) {
-                    OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerUUID);
-                    Location loc = region.getCenter();
+        for (ProtectionRegion region : allRegions) {
+            UUID ownerUUID = region.getOwner();
 
-                    ItemStack furnace = new ItemStack(Material.BLAST_FURNACE);
-                    ItemMeta meta = furnace.getItemMeta();
-                    meta.setDisplayName("§eРегион - " + owner.getName());
-                    meta.setLore(Arrays.asList(
-                            "§7X: " + loc.getBlockX(),
-                            "§7Y: " + loc.getBlockY(),
-                            "§7Z: " + loc.getBlockZ()
-                    ));
+            // Только если владелец региона — член текущего клана
+            if (!clanMembers.contains(ownerUUID)) continue;
 
-                    furnace.setItemMeta(meta);
-                    inv.setItem(index++, furnace);
+            OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerUUID);
+            Location loc = region.getCenter();
+            String status = getFurnaceStatus(loc); // "АКТИВЕН" / "НЕАКТИВЕН" / null
 
-                    if (index >= 54) break; // инвентарь заполнен
-                }
-            }
+            if (status == null) continue; // печка была сломана — не отображаем
 
-            inv.setItem(53, getBackButton());
+            ItemStack furnace = new ItemStack(Material.BLAST_FURNACE);
+            ItemMeta meta = furnace.getItemMeta();
+            meta.setDisplayName("§eРегион - " + owner.getName());
+            meta.setLore(Arrays.asList(
+                    "§7X: " + loc.getBlockX(),
+                    "§7Y: " + loc.getBlockY(),
+                    "§7Z: " + loc.getBlockZ(),
+                    "",
+                    (status.equals("АКТИВЕН") ? "§aСТАТУС: АКТИВЕН" : "§cСТАТУС: НЕАКТИВЕН")
+            ));
+            furnace.setItemMeta(meta);
+            inv.setItem(index++, furnace);
 
-            viewer.openInventory(inv);
+            if (index >= 53) break;
         }
+        inv.setItem(53, getBackButton());
+        viewer.openInventory(inv);
+
+
     }
 
     // ПРИВАТЫ
@@ -824,10 +823,7 @@ public class ClanMenu implements Listener {
 
     //
 
-
-
-
-
+    //
 
     @EventHandler
     public void onBackButtonClick(InventoryClickEvent event) {
@@ -871,8 +867,6 @@ public class ClanMenu implements Listener {
 
 
     // NEW METHODS
-
-
 
 
     public void openClanMenu(Player player, Clan clan) {
@@ -1034,7 +1028,29 @@ public class ClanMenu implements Listener {
 
 
 
+    public String getFurnaceStatus(Location loc) {
+        Block block = loc.getBlock();
+        if (block == null || block.getType() != Material.BLAST_FURNACE) {
+            return null; // Печка была сломана — регион не отображаем
+        }
 
+        BlockState state = block.getState();
+        if (!(state instanceof BlastFurnace furnace)) {
+            return null;
+        }
+
+        FurnaceInventory inv = furnace.getInventory();
+        ItemStack input = inv.getSmelting();
+        ItemStack fuel = inv.getFuel();
+
+        // если есть и предмет, и топливо
+        if (input != null && input.getType() != Material.AIR
+                && fuel != null && fuel.getType() == Material.COAL) {
+            return "АКТИВЕН";
+        }
+
+        return "НЕАКТИВЕН"; // топливо или предмета нет — печка на месте, но не работает
+    }
 
     public boolean isClanPvpEnabled(String clanName) {
         return clanPvpEnabled.getOrDefault(clanName, true);
@@ -1055,7 +1071,9 @@ public class ClanMenu implements Listener {
     }
 
     private void playClickSound(Player player) {
-        player.playSound(player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON,  1, 1);
+        player.playSound(player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 1, 1);
     }
+
+
 }
 

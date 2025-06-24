@@ -12,6 +12,7 @@ import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.BalanceManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.vault.VaultHook;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
+import dev.paramountdev.zlomCore_PDev.paraclans.ClanRole;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
 import dev.paramountdev.zlomCore_PDev.paraclans.PclanCommandType;
 import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
@@ -22,6 +23,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -188,13 +190,43 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
             return;
         }
 
+        // Первая фаза — загрузка базовых кланов
         for (String key : clansConfig.getKeys(false)) {
             String owner = clansConfig.getString(key + ".owner");
             List<String> members = clansConfig.getStringList(key + ".members");
+
+            // пока wars и tradecontracts пропускаем
             clans.put(key.toLowerCase(), new Clan(key, UUID.fromString(owner), new HashSet<>(members)));
-            members.forEach(uuid -> playerClan.put(UUID.fromString(uuid), key.toLowerCase()));
+            for (String uuid : members) {
+                playerClan.put(UUID.fromString(uuid), key.toLowerCase());
+            }
+        }
+
+        // Вторая фаза — привязка войн и торговых контрактов по имени клана
+        for (String key : clansConfig.getKeys(false)) {
+            Clan clan = clans.get(key.toLowerCase());
+            if (clan == null) continue;
+
+            // Привязка войн
+            List<String> warNames = clansConfig.getStringList(key + ".wars");
+            for (String warName : warNames) {
+                Clan warClan = clans.get(warName.toLowerCase());
+                if (warClan != null) {
+                    clan.addWar(warClan);
+                }
+            }
+
+            // Привязка торговых контрактов
+            List<String> tradeNames = clansConfig.getStringList(key + ".tradecontracts");
+            for (String tradeName : tradeNames) {
+                Clan tradeClan = clans.get(tradeName.toLowerCase());
+                if (tradeClan != null) {
+                    clan.addTradecontrat(tradeClan);
+                }
+            }
         }
     }
+
 
     private void saveClans() {
         if (clansConfig == null || clansFile == null) {
@@ -203,10 +235,25 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         }
 
         for (Map.Entry<String, Clan> entry : clans.entrySet()) {
+            String clanKey = entry.getKey();
             Clan clan = entry.getValue();
-            clansConfig.set(entry.getKey() + ".owner", clan.owner.toString());
-            List<String> memberUUIDs = new ArrayList<>(clan.getMembers());
-            clansConfig.set(entry.getKey() + ".members", memberUUIDs);
+
+            clansConfig.set(clanKey + ".owner", clan.owner.toString());
+            clansConfig.set(clanKey + ".members", new ArrayList<>(clan.getMembers()));
+
+            // Сохраняем имена кланов, с которыми война
+            List<String> warNames = new ArrayList<>();
+            for (Clan war : clan.getWars()) {
+                warNames.add(war.getName());
+            }
+            clansConfig.set(clanKey + ".wars", warNames);
+
+            // Сохраняем имена кланов с торговыми контрактами
+            List<String> tradeNames = new ArrayList<>();
+            for (Clan trade : clan.getTradecontrats()) {
+                tradeNames.add(trade.getName());
+            }
+            clansConfig.set(clanKey + ".tradecontracts", tradeNames);
         }
 
         try {
@@ -215,6 +262,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
             e.printStackTrace();
         }
     }
+
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -230,6 +278,14 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
         Player player = (Player) sender;
         if (args.length < 1) {
+            UUID playerUUIDMenu = player.getUniqueId();
+            String myClanNameMenu = playerClan.get(playerUUIDMenu);
+            if (myClanNameMenu == null || !clans.containsKey(myClanNameMenu)) {
+                clanMenu.openCreateMenu(player);
+                return;
+            }
+            Clan clanMenu1 = clans.get(myClanNameMenu);
+            clanMenu.openMainClanMenu(player, clanMenu1);
             return;
         }
         if (!playerClan.containsKey(player.getUniqueId())) {

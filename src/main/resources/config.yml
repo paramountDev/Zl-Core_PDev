@@ -48,6 +48,8 @@ roles:
     can-trade-contract: false
     can-trade-end: false
     can-remove-clan: false
+    place-private-furnace: false
+    break-private-furnace: false
   level2:
     name: "Бывалый"
     can-open-settings: false
@@ -58,6 +60,8 @@ roles:
     can-trade-contract: false
     can-trade-end: false
     can-remove-clan: false
+    place-private-furnace: false
+    break-private-furnace: false
   level3:
     name: "Командир"
     can-open-settings: true
@@ -68,6 +72,8 @@ roles:
     can-trade-contract: true
     can-trade-end: true
     can-remove-clan: false
+    place-private-furnace: false
+    break-private-furnace: false
 blacklist:
   - admin
   - owner

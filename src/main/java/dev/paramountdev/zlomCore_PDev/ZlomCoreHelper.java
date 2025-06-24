@@ -144,7 +144,7 @@ public final class ZlomCoreHelper {
             String prefix = "§7[" + color + clanName + "§7] ";
 
             if (prefix.length() > 16) {
-                prefix = color + clanName;
+                prefix = color + clanName + " ";
             }
 
             team.setPrefix(prefix);
