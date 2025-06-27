@@ -1,6 +1,10 @@
 package dev.paramountdev.zlomCore_PDev;
 
 import dev.paramountdev.zlomCore_PDev.boostyconnector.BoostConnector;
+import dev.paramountdev.zlomCore_PDev.configchanger.BoostyConfigGUI;
+import dev.paramountdev.zlomCore_PDev.configchanger.ClansConfigGUI;
+import dev.paramountdev.zlomCore_PDev.configchanger.CommandConfigSettings;
+import dev.paramountdev.zlomCore_PDev.configchanger.FurnaceConfigGUI;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceCommand;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.commands.AhBlockCommand;
@@ -153,10 +157,27 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
         // PARA CLANS
 
+
+        getCommand("openconfigsettings").setExecutor(new CommandConfigSettings());
+        getCommand("openconfigsettings").setTabCompleter(new CommandConfigSettings());
+        getServer().getPluginManager().registerEvents(new FurnaceConfigGUI(), this);
+        getServer().getPluginManager().registerEvents(new BoostyConfigGUI(), this);
+        getServer().getPluginManager().registerEvents(new ClansConfigGUI(), this);
+
+
+
+        getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
         getLogger().info("\u001B[35m!---------------ZlomCore Plugin enabled---------------!\u001B[0m");
         getLogger().info("\u001B[35m!---------------Made by Paramount_Dev---------------!\u001B[0m");
         getLogger().info("\u001B[35m!FunPay Link: https://funpay.com/uk/users/14397429/ !\u001B[0m");
+        getLogger().log(Level.INFO, "\n");
+        getLogger().info("\u001B[35m!BoosyConnector enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!FurnacePrivates enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!GalaxyEconomy enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!ParaClans enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!ConfigChanger enabled!\u001B[0m");
+        getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
 
@@ -172,9 +193,17 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         ahBlockManager.saveBlocks();
 
         getLogger().log(Level.INFO, "\n");
+        getLogger().log(Level.INFO, "\n");
         getLogger().info("\u001B[35m!---------------ZlomCore Plugin disabled---------------!\u001B[0m");
         getLogger().info("\u001B[35m!---------------Made by Paramount_Dev---------------!\u001B[0m");
         getLogger().info("\u001B[35m!FunPay Link: https://funpay.com/uk/users/14397429/ !\u001B[0m");
+        getLogger().log(Level.INFO, "\n");
+        getLogger().info("\u001B[35m!BoosyConnector disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!FurnacePrivates disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!GalaxyEconomy disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!ParaClans disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!ConfigChanger disabled!\u001B[0m");
+        getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
 

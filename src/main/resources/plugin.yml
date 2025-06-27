@@ -13,6 +13,14 @@ loadbefore:
 
 
 commands:
+
+  # CONFIG CHANGER
+  openconfigsettings:
+    description: Открыть настройки конфигурации
+    usage: /openconfigsettings <furnace|boosty|clans>
+    permission: configeditor.use
+
+
   # BOOSTY CONNECTOR
   checkslots:
     description: Проверка количества доступных слотов
@@ -46,7 +54,14 @@ commands:
     usage: /pclans <create|join|remove> <имя>
     aliases: [ clan, clans ]
 
+
+
+
 permissions:
+
   #BOOSTY_CONNECTOR
   boosty.admin:
+    default: op
+
+  configeditor.use:
     default: op

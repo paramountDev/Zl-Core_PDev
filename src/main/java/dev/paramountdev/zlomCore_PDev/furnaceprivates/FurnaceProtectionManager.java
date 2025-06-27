@@ -13,6 +13,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.FurnaceInventory;
@@ -36,6 +37,8 @@ public class FurnaceProtectionManager implements Listener {
     private final boolean adminBypass;
     private final Map<UUID, String> playerClan;
     private final Map<Location, ProtectionRegion> archivedProtections = new HashMap<>();
+    private final Map<UUID, Long> lastCombatTime = new HashMap<>();
+
 
 
     public static FurnaceProtectionManager getFpm() {
@@ -197,13 +200,23 @@ public class FurnaceProtectionManager implements Listener {
             UUID playerId = player.getUniqueId();
             if (!playerClan.containsKey(playerId)) {
                 player.sendMessage(ChatColor.RED + "Вы должны участвовать в клане, чтобы использовать приватную печку!");
-                event.getInventory().clear(0); // убираем предметы, чтобы не потерялись
-                player.getInventory().addItem(input); // возвращаем предметы игроку
+                event.getInventory().clear(0);
+                player.getInventory().addItem(input);
                 return;
             }
 
-
             if (!protections.containsKey(loc)) {
+
+                ProtectionRegion testRegion = new ProtectionRegion(player.getUniqueId(), loc);
+                int testSize = addedSize * inputAmount;
+                testRegion.setSize(testSize);
+
+                if (!canActivateFurnace(player, loc, testRegion)) {
+                    event.getInventory().clear(0);
+                    player.getInventory().addItem(input);
+                    return;
+                }
+
                 ProtectionRegion region = new ProtectionRegion(player.getUniqueId(), loc);
                 int newSize = addedSize * inputAmount;
                 region.setSize(newSize);
@@ -392,6 +405,87 @@ public class FurnaceProtectionManager implements Listener {
 
         return new ArrayList<>(result.values());
     }
+
+
+
+
+    public boolean canActivateFurnace(Player player, Location loc, ProtectionRegion region) {
+        int radius = plugin.getConfig().getInt("protection_from_player_radius", 7);
+
+        if (isInCombat(player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "Вы не можете активировать приват во время боя!");
+            return false;
+        }
+
+        for (ProtectionRegion existing : fpm.getAllRegions()) {
+            if (overlaps(region, existing)) {
+                player.sendMessage(ChatColor.RED + "Печь не может быть активирована — её зона пересекается с чужим приватом.");
+                return false;
+            }
+        }
+
+        if (isPlayerNearby(loc, radius, player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "Рядом находятся другие игроки.");
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player damager)) return;
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        lastCombatTime.put(damager.getUniqueId(), System.currentTimeMillis());
+        lastCombatTime.put(player.getUniqueId(), System.currentTimeMillis());
+    }
+
+    public boolean isInCombat(UUID uuid) {
+        long cooldown = plugin.getConfig().getLong("combat_cooldown_seconds", 10) * 1000;
+        return lastCombatTime.containsKey(uuid)
+                && (System.currentTimeMillis() - lastCombatTime.get(uuid)) < cooldown;
+    }
+
+    public boolean isPlayerNearby(Location center, int radius, UUID owner) {
+        for (Player player : center.getWorld().getPlayers()) {
+            if (player.getUniqueId().equals(owner)) continue;
+            if (player.getLocation().distance(center) <= radius) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean overlaps(ProtectionRegion myRegion, ProtectionRegion other) {
+        Location center = myRegion.getCenter();
+        Location otherCenter = other.getCenter();
+
+        int size = myRegion.getSize();
+        int otherSize = other.getSize();
+
+        if (!center.getWorld().equals(other.getCenter().getWorld())) return false;
+
+        int minX1 = center.getBlockX() - size;
+        int maxX1 = center.getBlockX() + size;
+        int minY1 = center.getBlockY() - size;
+        int maxY1 = center.getBlockY() + size;
+        int minZ1 = center.getBlockZ() - size;
+        int maxZ1 = center.getBlockZ() + size;
+
+        int minX2 = otherCenter.getBlockX() - otherSize;
+        int maxX2 = otherCenter.getBlockX() + otherSize;
+        int minY2 = otherCenter.getBlockY() - otherSize;
+        int maxY2 = otherCenter.getBlockY() + otherSize;
+        int minZ2 = otherCenter.getBlockZ() - otherSize;
+        int maxZ2 = otherCenter.getBlockZ() + otherSize;
+
+        return (minX1 <= maxX2 && maxX1 >= minX2) &&
+                (minY1 <= maxY2 && maxY1 >= minY2) &&
+                (minZ1 <= maxZ2 && maxZ1 >= minZ2);
+    }
+
 
 
 

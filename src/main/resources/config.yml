@@ -20,6 +20,8 @@ custom_furnace:
     - "&7Активируй её алмазом и углём"
 
 admin_bypass: true
+combat_cooldown_seconds: 10
+protection_from_player_radius: 10
 
 
 
