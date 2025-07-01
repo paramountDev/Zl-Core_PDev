@@ -4,6 +4,7 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.ProtectionRegion;
+import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanTopMenu;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
@@ -257,7 +258,7 @@ public class ClanMenu implements Listener {
         inv.setItem(18, occupation);
 
         ItemStack lvl = getItemStack(Material.EXPERIENCE_BOTTLE, "Уровень клана",
-                ChatColor.AQUA, "Текущий уровень клана: УРОВЕНЬ", ChatColor.GREEN);
+                ChatColor.AQUA, "Текущий уровень клана: " + clan.getLevel(), ChatColor.GREEN);
         inv.setItem(27, lvl);
 
         ItemStack top = getItemStack(Material.GOLD_BLOCK, "Топ кланов",
@@ -331,7 +332,7 @@ public class ClanMenu implements Listener {
                 break;
 
             case EXPERIENCE_BOTTLE:
-
+                plugin.getClanLevelMenu().openLevelMenu(player, clan);
                 break;
 
             case GOLD_BLOCK:

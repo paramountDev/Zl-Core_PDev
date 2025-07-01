@@ -18,6 +18,7 @@ public class Clan {
     public Set<String> members;
     public List<Clan> wars = new ArrayList<>();
     List<Clan> tradecontrats = new ArrayList<>();
+    private int level = 1;
 
     public Clan(String name, UUID owner, Set<String> members, List<Clan> wars, List<Clan> tradecontrats) {
         this.name = name;
@@ -100,4 +101,8 @@ public class Clan {
     public List<Clan> getTradecontrats() {
         return tradecontrats;
     }
+
+    public int getLevel() { return level; }
+
+    public void setLevel(int level) { this.level = level; }
 }

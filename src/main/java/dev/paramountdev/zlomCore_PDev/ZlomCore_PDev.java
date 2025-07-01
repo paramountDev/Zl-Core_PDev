@@ -21,6 +21,7 @@ import dev.paramountdev.zlomCore_PDev.paraclans.ClanRole;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
 import dev.paramountdev.zlomCore_PDev.paraclans.PclanCommandType;
 import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
+import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
 import net.milkbowl.vault.economy.Economy;
@@ -78,6 +79,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private ClanMenu clanMenu;
     private StatisticIncrementer statisticIncrementer;
     private ClanStatsTracker clanStatsTracker;
+    private ClanLevelMenu clanLevelMenu;
 
     @Override
     public void onEnable() {
@@ -164,6 +166,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         statisticIncrementer = new StatisticIncrementer(clanStatsTracker);
         Bukkit.getPluginManager().registerEvents(statisticIncrementer, this);
 
+        this.clanLevelMenu = new ClanLevelMenu();
+        getServer().getPluginManager().registerEvents(clanLevelMenu, this);
+
+
 
         // PARA CLANS
 
@@ -223,6 +229,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().log(Level.INFO, "\n");
     }
 
+
+
     private void loadClans() {
         clansFile = new File(getDataFolder(), "clans.yml");
         if (!clansFile.exists()) {
@@ -239,9 +247,13 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         for (String key : clansConfig.getKeys(false)) {
             String owner = clansConfig.getString(key + ".owner");
             List<String> members = clansConfig.getStringList(key + ".members");
+            int level = clansConfig.getInt(key + ".level", 1); // <= загрузка уровня клана
 
-            // пока wars и tradecontracts пропускаем
-            clans.put(key.toLowerCase(), new Clan(key, UUID.fromString(owner), new HashSet<>(members)));
+            Clan clan = new Clan(key, UUID.fromString(owner), new HashSet<>(members));
+            clan.setLevel(level); // <= установка уровня в объекте
+
+            clans.put(key.toLowerCase(), clan);
+
             for (String uuid : members) {
                 playerClan.put(UUID.fromString(uuid), key.toLowerCase());
             }
@@ -272,7 +284,6 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         }
     }
 
-
     private void saveClans() {
         if (clansConfig == null || clansFile == null) {
             getLogger().warning("clansConfig или clansFile не инициализированы. Пропускаем сохранение кланов.");
@@ -299,6 +310,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
                 tradeNames.add(trade.getName());
             }
             clansConfig.set(clanKey + ".tradecontracts", tradeNames);
+
+            clansConfig.set(clanKey + ".level", clan.getLevel());
         }
 
         try {
@@ -306,6 +319,9 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+
     }
 
 
@@ -361,7 +377,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         UUID uuid = player.getUniqueId();
 
         if (args.length == 1) {
-            return Stream.of("create", "join", "accept", "deny", "requests", "remove", "leave", "my", "menu", "settings", "tradecontractend", "tradecontract", "wardeclare", "warend")
+            return Stream.of("author", "create", "join", "accept", "deny", "requests", "remove", "leave", "my", "menu", "settings", "tradecontractend", "tradecontract", "wardeclare", "warend")
                     .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
                     .toList();
         }
@@ -503,6 +519,19 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     public StatisticIncrementer getStatisticIncrementer() { return statisticIncrementer; }
 
     public ClanStatsTracker getStatsTracker() { return clanStatsTracker; }
+
+
+    public Clan getClanByPlayer(UUID playerUUID) {
+        String clanName = playerClan.get(playerUUID);
+        if (clanName == null) return null;
+        return clans.get(clanName.toLowerCase());
+    }
+
+
+    public ClanLevelMenu getClanLevelMenu() {
+        return clanLevelMenu;
+    }
+
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp =

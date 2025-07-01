@@ -3,11 +3,17 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,7 +40,8 @@ public enum PclanCommandType {
     TRADECONTRACT("tradecontract"),
     TRADECONTRACTEND("tradecontractend"),
     MENU("menu"),
-    SETTINGS("settings");
+    SETTINGS("settings"),
+    AUTHOR("author");
 
     private final String name;
 
@@ -454,6 +461,50 @@ public enum PclanCommandType {
                 }
                 clanMenu.openSettingsMenu(player, clanSettings);
                 break;
+
+
+            case AUTHOR:
+                player.sendMessage("");
+                player.sendMessage("");
+                player.sendMessage(ChatColor.DARK_GREEN + "=====[ " + ChatColor.GOLD + "Разработчик ParaClans" + ChatColor.DARK_GREEN + " ]=====");
+                player.sendMessage("");
+                player.sendMessage(ChatColor.YELLOW + "Автор: " + ChatColor.GREEN + "ParamountDev");
+                player.sendMessage("");
+
+                // FunPay
+                TextComponent funpayPrefix = new TextComponent("• ");
+                funpayPrefix.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+
+                TextComponent funpayLink = new TextComponent("FunPay профиль");
+                funpayLink.setColor(net.md_5.bungee.api.ChatColor.AQUA);
+                funpayLink.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://funpay.com/uk/users/14397429/"));
+                funpayLink.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        new ComponentBuilder("Открыть профиль FunPay").create()));
+
+                funpayPrefix.addExtra(funpayLink);
+                player.spigot().sendMessage(funpayPrefix);
+
+                // Telegram
+                TextComponent tgPrefix = new TextComponent("• ");
+                tgPrefix.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+
+                TextComponent tgLink = new TextComponent("Telegram: @paramount1_dev");
+                tgLink.setColor(net.md_5.bungee.api.ChatColor.AQUA);
+                tgLink.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://t.me/paramount1_dev"));
+                tgLink.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        new ComponentBuilder("Открыть Telegram").create()));
+
+                tgPrefix.addExtra(tgLink);
+                player.spigot().sendMessage(tgPrefix);
+                player.sendMessage("");
+
+                player.sendMessage(ChatColor.DARK_GREEN + "===============================");
+                player.sendMessage("");
+                player.sendMessage("");
+
+
+                break;
+
         }
 
     }
