@@ -24,6 +24,8 @@ import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
+import dev.paramountdev.zlomCore_PDev.shop.ShopCommand;
+import dev.paramountdev.zlomCore_PDev.shop.ShopMenu;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -185,6 +187,11 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getServer().getPluginManager().registerEvents(new CombatManager(this, config), this);
 
 
+        getCommand("pshop").setExecutor(new ShopCommand());
+        getServer().getPluginManager().registerEvents(new ShopMenu(), this);
+
+
+
 
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
@@ -198,6 +205,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!ParaClans enabled!\u001B[0m");
         getLogger().info("\u001B[35m!ConfigChanger enabled!\u001B[0m");
         getLogger().info("\u001B[35m!CombatManager enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!DiamondShopper enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -225,6 +233,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!ParaClans disabled!\u001B[0m");
         getLogger().info("\u001B[35m!ConfigChanger disabled!\u001B[0m");
         getLogger().info("\u001B[35m!CombatManager disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!DiamondShopper disabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }

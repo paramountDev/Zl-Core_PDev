@@ -100,6 +100,25 @@ blacklist:
 
 
 
+##### SHOP CONFIG #####
+
+shop:
+  items:
+    DIAMOND:
+      buy-price: 100
+      sell-price: 80
+
+    NETHERITE_INGOT:
+      buy-price: 500
+      sell-price: 400
+
+
+  tax-percent: 10.0  # Процент комиссии с каждой сделки
+
+
+
+
+
 
 messages:
 

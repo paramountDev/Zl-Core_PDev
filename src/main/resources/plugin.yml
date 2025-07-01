@@ -54,6 +54,9 @@ commands:
     usage: /pclans <create|join|remove> <имя>
     aliases: [ clan, clans ]
 
+  pshop:
+    description: Открывает магазин
+    aliases: [ shop ]
 
 
 
