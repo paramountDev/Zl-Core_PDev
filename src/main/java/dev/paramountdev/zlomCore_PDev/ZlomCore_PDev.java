@@ -1,6 +1,7 @@
 package dev.paramountdev.zlomCore_PDev;
 
 import dev.paramountdev.zlomCore_PDev.boostyconnector.BoostConnector;
+import dev.paramountdev.zlomCore_PDev.combatmanager.CombatManager;
 import dev.paramountdev.zlomCore_PDev.configchanger.BoostyConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.ClansConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.CommandConfigSettings;
@@ -20,6 +21,8 @@ import dev.paramountdev.zlomCore_PDev.paraclans.ClanRole;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
 import dev.paramountdev.zlomCore_PDev.paraclans.PclanCommandType;
 import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
+import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
+import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -73,6 +76,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private FileConfiguration config;
     private Map<String, List<UUID>> joinRequests = new HashMap<>();
     private ClanMenu clanMenu;
+    private StatisticIncrementer statisticIncrementer;
+    private ClanStatsTracker clanStatsTracker;
 
     @Override
     public void onEnable() {
@@ -155,6 +160,11 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
         roleManager = new ClanRoleManager(config);
 
+        clanStatsTracker = new ClanStatsTracker();
+        statisticIncrementer = new StatisticIncrementer(clanStatsTracker);
+        Bukkit.getPluginManager().registerEvents(statisticIncrementer, this);
+
+
         // PARA CLANS
 
 
@@ -163,6 +173,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getServer().getPluginManager().registerEvents(new FurnaceConfigGUI(), this);
         getServer().getPluginManager().registerEvents(new BoostyConfigGUI(), this);
         getServer().getPluginManager().registerEvents(new ClansConfigGUI(), this);
+
+
+
+        getServer().getPluginManager().registerEvents(new CombatManager(this, config), this);
 
 
 
@@ -177,6 +191,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!GalaxyEconomy enabled!\u001B[0m");
         getLogger().info("\u001B[35m!ParaClans enabled!\u001B[0m");
         getLogger().info("\u001B[35m!ConfigChanger enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!CombatManager enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -203,6 +218,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!GalaxyEconomy disabled!\u001B[0m");
         getLogger().info("\u001B[35m!ParaClans disabled!\u001B[0m");
         getLogger().info("\u001B[35m!ConfigChanger disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!CombatManager disabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -483,6 +499,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     public static ClanRoleManager getRoleManager() {
         return roleManager;
     }
+
+    public StatisticIncrementer getStatisticIncrementer() { return statisticIncrementer; }
+
+    public ClanStatsTracker getStatsTracker() { return clanStatsTracker; }
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp =

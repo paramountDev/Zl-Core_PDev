@@ -4,6 +4,7 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.ProtectionRegion;
+import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanTopMenu;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -318,7 +319,7 @@ public class ClanMenu implements Listener {
 
             case PLAYER_HEAD:
                 if (clicked.getItemMeta().getDisplayName().contains("Пригласить игрока")) {
-                    player.sendMessage("Вы нажали на Пригласить друга, эта функция будет доступна в следующем обновлении");
+                    openInviteAnvilGUI(player, clan);
                 }
                 if (clicked.getItemMeta().getDisplayName().contains("Приваты клана")) {
                     openRegionsMenu(player, clan);
@@ -334,7 +335,9 @@ public class ClanMenu implements Listener {
                 break;
 
             case GOLD_BLOCK:
-                player.sendMessage("Вы нажали на Топ кланы, эта функция будет доступна в следующем обновлении");
+                ClanTopMenu menu = new ClanTopMenu(plugin.getStatsTracker());
+                Set<String> members = clan.getMembers();
+                menu.openForPlayer(player, members);
                 break;
 
             case BELL:
@@ -351,12 +354,67 @@ public class ClanMenu implements Listener {
 
             case IRON_DOOR:
                 player.closeInventory();
-                player.performCommand("pclans leave");
+                if (clan.getOwner().equals(player.getUniqueId())) {
+                    openChooseSuccessorMenu(player, clan);
+                } else {
+                    player.performCommand("pclans leave");
+                }
                 break;
+
         }
     }
 
     // ГЛАВНОЕ МЕНЮ КЛАНА
+
+    //
+
+    // ПРИГЛАСИТЬ ИГРОКА
+
+    public void openInviteAnvilGUI(Player inviter, Clan clan) {
+        new AnvilGUI.Builder()
+                .plugin(plugin)
+                .title("Введите ник игрока:")
+                .itemLeft(new ItemStack(Material.PLAYER_HEAD))
+                .text("Ник игрока")
+                .onClick((slot, stateSnapshot) -> {
+
+                    if (slot == AnvilGUI.Slot.OUTPUT) {
+                        String input = stateSnapshot.getText();
+
+                        if (input == null || input.trim().isEmpty()) {
+                            inviter.sendMessage("§cВы не ввели ник игрока.");
+                            return AnvilGUI.Response.close();
+                        }
+
+                        String targetName = ChatColor.stripColor(input.trim());
+
+                        Player target = Bukkit.getPlayerExact(targetName);
+                        if (target == null || !target.isOnline()) {
+                            inviter.sendMessage("§cИгрок не найден или не в сети.");
+                            return AnvilGUI.Response.close();
+                        }
+
+                        // Проверка: уже в клане?
+                        if (plugin.getPlayerClan().containsKey(target.getUniqueId())) {
+                            inviter.sendMessage("§cЭтот игрок уже состоит в клане.");
+                            return AnvilGUI.Response.close();
+                        }
+
+                        target.sendMessage("");
+                        target.sendMessage("§aВы были приглашены в клан §e" + clan.getName() + " §aигроком §b" + inviter.getName());
+                        target.sendMessage("§7Введите §f/pclans join " + clan.getName() + " §7чтобы подать заявку на вступление!");
+                        target.sendMessage("");
+
+                        inviter.sendMessage("§aВы пригласили игрока §b" + target.getName() + " §aв клан.");
+
+                        return AnvilGUI.Response.close();
+                    }
+                    return AnvilGUI.Response.close();
+                })
+                .open(inviter);
+    }
+
+    // ПРИГЛАСИТЬ ИГРОКА
 
     //
 
@@ -822,6 +880,103 @@ public class ClanMenu implements Listener {
     // МЕНЮ НАСТРОЕК
 
     //
+
+    // ВЫХОД ИЗ КЛАНА ДЛЯ ВЛАДЕЛЬЦА
+
+    public void openChooseSuccessorMenu(Player owner, Clan clan) {
+        List<String> memberUUIDs = new ArrayList<>(clan.getMembers());
+
+        // Удалим владельца из списка (он сам не может быть преемником)
+        memberUUIDs.remove(owner.getUniqueId().toString());
+
+        if (memberUUIDs.isEmpty()) {
+            owner.closeInventory();
+            owner.performCommand("pclans remove " + clan.getName());
+            return;
+        }
+
+        Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_RED + "Выберите приемника:");
+
+        ItemStack filler = createFiller();
+        for (int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, filler);
+        }
+
+        int index = 0;
+        for (String uuidStr : memberUUIDs) {
+            UUID uuid = UUID.fromString(uuidStr);
+            OfflinePlayer target = Bukkit.getOfflinePlayer(uuid);
+
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            if (meta != null) {
+                meta.setOwningPlayer(target);
+                meta.setDisplayName(ChatColor.GREEN + target.getName());
+                meta.setLore(List.of(ChatColor.GRAY + "ЛКМ - передать ему лидерство"));
+                head.setItemMeta(meta);
+            }
+
+            inv.setItem(index++, head);
+        }
+
+        owner.openInventory(inv);
+    }
+
+    @EventHandler
+    public void onChooseSuccessorClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+        String title = ChatColor.stripColor(event.getView().getTitle());
+
+        if (!title.equals("Выберите приемника:")) return;
+
+        event.setCancelled(true);
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() != Material.PLAYER_HEAD) return;
+
+        Clan clan = plugin.getClans().get(plugin.getPlayerClan().get(player.getUniqueId()));
+        if (clan == null) return;
+
+        if (!clan.getOwner().equals(player.getUniqueId())) {
+            player.sendMessage("§cТолько владелец клана может передавать лидерство.");
+            player.closeInventory();
+            return;
+        }
+
+        SkullMeta meta = (SkullMeta) clicked.getItemMeta();
+        if (meta == null || meta.getOwningPlayer() == null) return;
+
+        OfflinePlayer newOwner = meta.getOwningPlayer();
+        UUID newOwnerUUID = newOwner.getUniqueId();
+
+        clan.setOwner(newOwnerUUID);
+        clan.getMembers().remove(player.getUniqueId().toString());
+        plugin.getPlayerClan().remove(player.getUniqueId());
+
+        player.sendMessage("§aВы передали лидерство игроку " + newOwner.getName() + " и вышли из клана.");
+        if (newOwner.isOnline()) {
+            newOwner.getPlayer().sendMessage("§aВы стали новым владельцем клана " + clan.getName());
+        }
+
+        player.closeInventory();
+        updatePlayerNames(player, plugin.getPlayerClan(), plugin.getClanMenu(), plugin.getMainBoard());
+    }
+
+    // ВЫХОД ИЗ КЛАНА ДЛЯ ВЛАДЕЛЬЦА
+
+    //
+
+    // ТОП СРЕДИ КЛАНА
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals("§6Топ кланы")) {
+            event.setCancelled(true);
+        }
+    }
+
+    // ТОП СРЕДИ КЛАНА
 
     //
 
