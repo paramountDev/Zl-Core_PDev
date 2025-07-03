@@ -1,5 +1,6 @@
 package dev.paramountdev.zlomCore_PDev;
 
+import dev.paramountdev.zlomCore_PDev.avik.AvikManager;
 import dev.paramountdev.zlomCore_PDev.boostyconnector.BoostConnector;
 import dev.paramountdev.zlomCore_PDev.combatmanager.CombatManager;
 import dev.paramountdev.zlomCore_PDev.configchanger.BoostyConfigGUI;
@@ -82,6 +83,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private StatisticIncrementer statisticIncrementer;
     private ClanStatsTracker clanStatsTracker;
     private ClanLevelMenu clanLevelMenu;
+    private AvikManager avikManager;
 
     @Override
     public void onEnable() {
@@ -193,6 +195,16 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
 
 
+        avikManager = new AvikManager();
+        avikManager.initStorage(getDataFolder());
+
+        getCommand("avik").setExecutor(avikManager);
+        getCommand("avik").setTabCompleter(avikManager);
+        getServer().getPluginManager().registerEvents(avikManager, this);
+
+
+
+
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
         getLogger().info("\u001B[35m!---------------ZlomCore Plugin enabled---------------!\u001B[0m");
@@ -206,6 +218,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!ConfigChanger enabled!\u001B[0m");
         getLogger().info("\u001B[35m!CombatManager enabled!\u001B[0m");
         getLogger().info("\u001B[35m!DiamondShopper enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!AvikTaskManager enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -221,6 +234,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         balanceManager.saveBalances();
         ahBlockManager.saveBlocks();
 
+        if (avikManager != null) {
+            avikManager.saveAllTasks();
+        }
+
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
         getLogger().info("\u001B[35m!---------------ZlomCore Plugin disabled---------------!\u001B[0m");
@@ -234,6 +251,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!ConfigChanger disabled!\u001B[0m");
         getLogger().info("\u001B[35m!CombatManager disabled!\u001B[0m");
         getLogger().info("\u001B[35m!DiamondShopper disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!AvikTaskManager disabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }

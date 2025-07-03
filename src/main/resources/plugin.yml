@@ -58,6 +58,10 @@ commands:
     description: Открывает магазин
     aliases: [ shop ]
 
+  avik:
+    description: Меню задач Avik
+    usage: /avik
+
 
 
 permissions:
