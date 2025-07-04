@@ -116,6 +116,43 @@ public class AvikManager implements CommandExecutor, TabCompleter, Listener {
                     }
                     return true;
                 }
+                if (subcommand.equals("report")) {
+                    if (parsedArgs.size() < 3) {
+                        player.sendMessage(ChatColor.RED + "/avik report <Ник> \"Причина жалобы\"");
+                        return true;
+                    }
+
+                    String targetName = parsedArgs.get(1);
+                    String reason = parsedArgs.get(2);
+
+                    Player targetPlayer = Bukkit.getPlayerExact(targetName);
+
+                    String reporterName = player.getName();
+
+                    String reportMsg = ChatColor.RED + "Жалоба от игрока: " + ChatColor.YELLOW + reporterName + "\n" +
+                            ChatColor.RED + "Жалуются на: " + ChatColor.YELLOW + targetName + "\n" +
+                            ChatColor.RED + "Причина: " + ChatColor.GRAY + reason;
+
+                    boolean sentToAdmins = false;
+
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (p.hasPermission("avik.admin")) {
+                            p.sendMessage(reportMsg);
+                            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                            sentToAdmins = true;
+                        }
+                    }
+
+                    if (sentToAdmins) {
+                        player.sendMessage(ChatColor.GREEN + "Жалоба успешно отправлена администраторам. Подождите пока они обработают запрос и обратятся к вам в ближайшее время.");
+                    } else {
+                        player.sendMessage(ChatColor.YELLOW + "На сервере сейчас нет админов. Жалоба была заморожена к моменту их появления.");
+                    }
+
+                    return true;
+                }
+
+
             }
 
             openTaskMenu(player);
@@ -286,7 +323,7 @@ public class AvikManager implements CommandExecutor, TabCompleter, Listener {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("create", "delete");
+            return Arrays.asList("create", "delete", "report");
         }
         return Collections.emptyList();
     }

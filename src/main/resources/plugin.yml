@@ -72,3 +72,7 @@ permissions:
 
   configeditor.use:
     default: op
+
+  avik.admin:
+    description: Получает оповещения о жалобах
+    default: op
