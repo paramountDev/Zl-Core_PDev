@@ -91,6 +91,16 @@ public final class ZlomCoreHelper {
         return skull;
     }
 
+    public static ItemStack getBackButton() {
+        return getItemStack(
+                Material.PRISMARINE_SHARD,
+                "Назад",
+                ChatColor.GRAY,
+                "Вернуться в главное меню",
+                ChatColor.DARK_GRAY
+        );
+    }
+
 
     public static ItemStack createFiller() {
         ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);

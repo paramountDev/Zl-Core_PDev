@@ -118,6 +118,16 @@ shop:
 
 
 
+##### ORDERS CONFIG #####
+
+max-orders-per-player: 5
+blacklisted-materials:
+  - BEDROCK
+  - COMMAND_BLOCK
+
+
+
+
 
 
 messages:

@@ -16,6 +16,14 @@ import dev.paramountdev.zlomCore_PDev.galaxyeconomy.listeners.AhCommandBlocker;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.AhBlockManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.BalanceManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.vault.VaultHook;
+import dev.paramountdev.zlomCore_PDev.orders.ChatInputHandler;
+import dev.paramountdev.zlomCore_PDev.orders.ItemSelectGUI;
+import dev.paramountdev.zlomCore_PDev.orders.OrderBackButtonClickListener;
+import dev.paramountdev.zlomCore_PDev.orders.OrderManager;
+import dev.paramountdev.zlomCore_PDev.orders.OrdersCommand;
+import dev.paramountdev.zlomCore_PDev.orders.OrdersGUI;
+import dev.paramountdev.zlomCore_PDev.orders.PurchasedItemsManager;
+import dev.paramountdev.zlomCore_PDev.orders.SellAmountListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRole;
@@ -84,6 +92,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private ClanStatsTracker clanStatsTracker;
     private ClanLevelMenu clanLevelMenu;
     private AvikManager avikManager;
+    private OrderManager orderManager;
 
     @Override
     public void onEnable() {
@@ -203,6 +212,14 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getServer().getPluginManager().registerEvents(avikManager, this);
 
 
+        orderManager = new OrderManager();
+        getCommand("orders").setExecutor(new OrdersCommand(orderManager));
+        getServer().getPluginManager().registerEvents(new OrdersGUI(orderManager), this);
+        getServer().getPluginManager().registerEvents(new SellAmountListener(), this);
+        getServer().getPluginManager().registerEvents(new PurchasedItemsManager(), this);
+        getServer().getPluginManager().registerEvents(new ItemSelectGUI(), this);
+        getServer().getPluginManager().registerEvents(new ChatInputHandler(), this);
+        getServer().getPluginManager().registerEvents(new OrderBackButtonClickListener(), this);
 
 
         getLogger().log(Level.INFO, "\n");
@@ -219,6 +236,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!CombatManager enabled!\u001B[0m");
         getLogger().info("\u001B[35m!DiamondShopper enabled!\u001B[0m");
         getLogger().info("\u001B[35m!AvikTaskManager enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!CrazyOrders enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -252,6 +270,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!CombatManager disabled!\u001B[0m");
         getLogger().info("\u001B[35m!DiamondShopper disabled!\u001B[0m");
         getLogger().info("\u001B[35m!AvikTaskManager disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!CrazyOrders disabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -552,6 +571,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         String clanName = playerClan.get(playerUUID);
         if (clanName == null) return null;
         return clans.get(clanName.toLowerCase());
+    }
+
+    public OrderManager getOrderManager() {
+        return orderManager;
     }
 
 

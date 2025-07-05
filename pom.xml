@@ -6,7 +6,7 @@
 
     <groupId>dev.paramountdev</groupId>
     <artifactId>ZlomCore_PDev</artifactId>
-    <version>1.8</version>
+    <version>1.9</version>
     <packaging>jar</packaging>
 
     <name>ZlomCore_PDev</name>

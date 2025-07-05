@@ -62,6 +62,10 @@ commands:
     description: Меню задач Avik
     usage: /avik
 
+  orders:
+    description: Меню заказов
+    usage: /orders [create <тип_блока> <кол-во> <цена>]
+
 
 
 permissions:
@@ -76,3 +80,8 @@ permissions:
   avik.admin:
     description: Получает оповещения о жалобах
     default: op
+
+  orders.create:
+    default: true
+  orders.use:
+    default: true
