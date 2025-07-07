@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.orders;
+package dev.paramountdev.zlomCore_PDev.crazyorders;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.shop;
+package dev.paramountdev.zlomCore_PDev.diamondshopper;
 
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import org.bukkit.Bukkit;

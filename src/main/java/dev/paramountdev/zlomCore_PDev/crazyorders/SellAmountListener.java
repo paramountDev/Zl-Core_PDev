@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.orders;
+package dev.paramountdev.zlomCore_PDev.crazyorders;
 
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import net.milkbowl.vault.economy.Economy;

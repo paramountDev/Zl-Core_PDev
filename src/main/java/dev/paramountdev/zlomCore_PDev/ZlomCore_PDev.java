@@ -1,7 +1,23 @@
 package dev.paramountdev.zlomCore_PDev;
 
-import dev.paramountdev.zlomCore_PDev.avik.AvikManager;
+import dev.paramountdev.zlomCore_PDev.aviktaskmanager.AvikManager;
+import dev.paramountdev.zlomCore_PDev.basecommands.home.HomeCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.home.SetHomeCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.rtp.RTPCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.spawn.SetSpawnCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.spawn.SpawnCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.tpa.TpAcceptCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.tpa.TpDenyCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.tpa.TpaCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.warp.SetWarpCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.warp.WarpCommand;
+import dev.paramountdev.zlomCore_PDev.basecommands.warp.WarpManager;
 import dev.paramountdev.zlomCore_PDev.boostyconnector.BoostConnector;
+import dev.paramountdev.zlomCore_PDev.parachats.ClanChat;
+import dev.paramountdev.zlomCore_PDev.parachats.GlobalChat;
+import dev.paramountdev.zlomCore_PDev.parachats.JailChat;
+import dev.paramountdev.zlomCore_PDev.parachats.LocalChat;
+import dev.paramountdev.zlomCore_PDev.parachats.PrivateChat;
 import dev.paramountdev.zlomCore_PDev.combatmanager.CombatManager;
 import dev.paramountdev.zlomCore_PDev.configchanger.BoostyConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.ClansConfigGUI;
@@ -16,25 +32,24 @@ import dev.paramountdev.zlomCore_PDev.galaxyeconomy.listeners.AhCommandBlocker;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.AhBlockManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.BalanceManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.vault.VaultHook;
-import dev.paramountdev.zlomCore_PDev.orders.ChatInputHandler;
-import dev.paramountdev.zlomCore_PDev.orders.ItemSelectGUI;
-import dev.paramountdev.zlomCore_PDev.orders.OrderBackButtonClickListener;
-import dev.paramountdev.zlomCore_PDev.orders.OrderManager;
-import dev.paramountdev.zlomCore_PDev.orders.OrdersCommand;
-import dev.paramountdev.zlomCore_PDev.orders.OrdersGUI;
-import dev.paramountdev.zlomCore_PDev.orders.PurchasedItemsManager;
-import dev.paramountdev.zlomCore_PDev.orders.SellAmountListener;
+import dev.paramountdev.zlomCore_PDev.crazyorders.ChatInputHandler;
+import dev.paramountdev.zlomCore_PDev.crazyorders.ItemSelectGUI;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrderBackButtonClickListener;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrderManager;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrdersCommand;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrdersGUI;
+import dev.paramountdev.zlomCore_PDev.crazyorders.PurchasedItemsManager;
+import dev.paramountdev.zlomCore_PDev.crazyorders.SellAmountListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
-import dev.paramountdev.zlomCore_PDev.paraclans.ClanRole;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
 import dev.paramountdev.zlomCore_PDev.paraclans.PclanCommandType;
 import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
-import dev.paramountdev.zlomCore_PDev.shop.ShopCommand;
-import dev.paramountdev.zlomCore_PDev.shop.ShopMenu;
+import dev.paramountdev.zlomCore_PDev.diamondshopper.ShopCommand;
+import dev.paramountdev.zlomCore_PDev.diamondshopper.ShopMenu;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -42,7 +57,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -55,7 +69,6 @@ import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,6 +106,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private ClanLevelMenu clanLevelMenu;
     private AvikManager avikManager;
     private OrderManager orderManager;
+
+    private final Map<String, String> warpOwners = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -222,6 +237,33 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getServer().getPluginManager().registerEvents(new OrderBackButtonClickListener(), this);
 
 
+
+        getServer().getPluginManager().registerEvents(new GlobalChat(), this);
+        getServer().getPluginManager().registerEvents(new LocalChat(), this);
+        getServer().getPluginManager().registerEvents(new JailChat(), this);
+        getServer().getPluginManager().registerEvents(new PrivateChat(), this);
+        getServer().getPluginManager().registerEvents(new ClanChat(), this);
+
+
+
+        getCommand("spawn").setExecutor(new SpawnCommand());
+        getCommand("setspawn").setExecutor(new SetSpawnCommand());
+
+        getCommand("home").setExecutor(new HomeCommand());
+        getCommand("sethome").setExecutor(new SetHomeCommand());
+
+        getCommand("rtp").setExecutor(new RTPCommand());
+
+        WarpManager.loadWarps();
+        getCommand("warp").setExecutor(new WarpCommand());
+        getCommand("setwarp").setExecutor(new SetWarpCommand());
+
+
+        getCommand("tpa").setExecutor(new TpaCommand());
+        getCommand("tpaccept").setExecutor(new TpAcceptCommand());
+        getCommand("tpdeny").setExecutor(new TpDenyCommand());
+
+
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
         getLogger().info("\u001B[35m!---------------ZlomCore Plugin enabled---------------!\u001B[0m");
@@ -237,6 +279,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!DiamondShopper enabled!\u001B[0m");
         getLogger().info("\u001B[35m!AvikTaskManager enabled!\u001B[0m");
         getLogger().info("\u001B[35m!CrazyOrders enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!ParaChats enabled!\u001B[0m");
+        getLogger().info("\u001B[35m!TeleportCore enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -271,6 +315,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!DiamondShopper disabled!\u001B[0m");
         getLogger().info("\u001B[35m!AvikTaskManager disabled!\u001B[0m");
         getLogger().info("\u001B[35m!CrazyOrders disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!ParaChats disabled!\u001B[0m");
+        getLogger().info("\u001B[35m!TeleportCore enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
     }
@@ -580,6 +626,14 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
     public ClanLevelMenu getClanLevelMenu() {
         return clanLevelMenu;
+    }
+
+    public void setWarpOwner(String warp, String playerName) {
+        warpOwners.put(warp.toLowerCase(), playerName);
+    }
+
+    public String getWarpOwner(String warp) {
+        return warpOwners.getOrDefault(warp.toLowerCase(), "");
     }
 
 

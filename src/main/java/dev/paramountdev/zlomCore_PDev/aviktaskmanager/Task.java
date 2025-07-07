@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.avik;
+package dev.paramountdev.zlomCore_PDev.aviktaskmanager;
 
 import java.util.HashMap;
 import java.util.Map;

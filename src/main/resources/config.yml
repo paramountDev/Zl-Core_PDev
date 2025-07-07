@@ -127,6 +127,57 @@ blacklisted-materials:
 
 
 
+##### CHATS CONFIG #####
+
+chat:
+
+  formats:
+    clan: "&f[&9Clan&f] &r{player}: {message}"
+    global: "&f[&cGlobal&f] &r{player}: {message}"
+    jail: "&f[&4Jail&f] &r{player}: {message}"
+    local: "&f[&aLocal&f] &r{player}: {message}"
+    private: "&f[&5Private&f] &r{player}: {message}"
+
+
+  radius:
+    jail: 100
+    local: 100
+
+jail:
+  xMin: 0
+  xMax: 100
+  zMin: 0
+  zMax: 100
+
+
+
+
+##### COMMANDS CONFIG #####
+
+spawn:
+  price: 100.0
+  allow-cross-world: false
+
+homes:
+  enabled: false # true - включить /sethome
+  cost: 50.0
+  cross-world: false
+
+rtp:
+  enabled: false
+  cost: 75.0
+  max-radius: 10000
+
+tpa:
+  cross-world: false
+  default-cost: 30000
+
+warp:
+  create-cost: 500000
+  cross-world: false
+  default-limit: 1
+
+
 
 
 

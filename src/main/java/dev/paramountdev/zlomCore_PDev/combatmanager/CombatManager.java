@@ -91,5 +91,13 @@ public class CombatManager implements Listener {
             event.getPlayer().setHealth(0.0);
         }
     }
+
+    public boolean inPVP(Player player) {
+        if (combatTagged.containsKey(Bukkit.getPlayerUniqueId(player.getName()))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 

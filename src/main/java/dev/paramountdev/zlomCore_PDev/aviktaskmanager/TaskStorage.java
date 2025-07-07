@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.avik;
+package dev.paramountdev.zlomCore_PDev.aviktaskmanager;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;

@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.shop;
+package dev.paramountdev.zlomCore_PDev.diamondshopper;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

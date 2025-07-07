@@ -2,8 +2,12 @@ name: ZlomCore_PDev
 version: '1.0'
 main: dev.paramountdev.zlomCore_PDev.ZlomCore_PDev
 api-version: '1.21'
+
 author: "ParamountDev"
-website: https://funpay.com/uk/users/14397429/
+website_funpay: https://funpay.com/uk/users/14397429/
+website_youtube: https://www.youtube.com/@paramount_dev12
+telegram: paramount1_dev
+
 
 depend: [Vault]
 loadbefore:
@@ -66,6 +70,30 @@ commands:
     description: Меню заказов
     usage: /orders [create <тип_блока> <кол-во> <цена>]
 
+  spawn:
+    description: Телепорт на спавн
+  setspawn:
+    description: Установить точку спавна
+
+  home:
+    description: Телепорт домой
+  sethome:
+    description: Установить точку дома
+
+  rtp:
+    description: Телепорт в случайную точку
+
+  warp:
+    description: Телепорт к варпу
+  setwarp:
+    description: Создание варпа
+
+  tpa:
+    description: Запрос на телепортацию
+  tpaccept:
+    description: Принять запрос на телепортацию
+  tpdeny:
+    description: Отклонить запрос на телепортацию
 
 
 permissions:
@@ -85,3 +113,9 @@ permissions:
     default: true
   orders.use:
     default: true
+
+
+  teleportcore.spawn:
+    default: true
+  teleportcore.setspawn:
+    default: op

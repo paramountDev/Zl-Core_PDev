@@ -1,4 +1,4 @@
-package dev.paramountdev.zlomCore_PDev.orders;
+package dev.paramountdev.zlomCore_PDev.crazyorders;
 
 import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;

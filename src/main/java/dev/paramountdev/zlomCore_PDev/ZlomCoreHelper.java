@@ -7,6 +7,7 @@ import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -16,7 +17,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -201,5 +201,31 @@ public final class ZlomCoreHelper {
         return true;
     }
 
+    public static boolean isInJail(Location loc) {
+        int x = loc.getBlockX();
+        int z = loc.getBlockZ();
+
+        ZlomCore_PDev plugin = ZlomCore_PDev.getInstance();
+
+        int xMin = plugin.getConfig().getInt("jail.xMin");
+        int xMax = plugin.getConfig().getInt("jail.xMax");
+        int zMin = plugin.getConfig().getInt("jail.zMin");
+        int zMax = plugin.getConfig().getInt("jail.zMax");
+
+        return x >= xMin && x <= xMax && z >= zMin && z <= zMax;
+    }
+
+    public static String formatMessage(String key, Player player, String message) {
+        String format = ZlomCore_PDev.getInstance().getConfig().getString("chat.formats." + key);
+        if (format == null) return message;
+
+        return ChatColor.translateAlternateColorCodes('&',
+                format.replace("{player}", player.getDisplayName()).replace("{message}", message)
+        );
+    }
+
+    public static int getChatRadius(String key) {
+        return ZlomCore_PDev.getInstance().getConfig().getInt("chat.radius." + key, 100);
+    }
 
 }
