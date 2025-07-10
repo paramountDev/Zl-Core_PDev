@@ -34,6 +34,8 @@ public class ItemSelectGUI implements Listener {
             inv.addItem(new ItemStack(mat));
         }
 
+        ZlomCoreHelper.fillInventory(inv, 45);
+
         // Назад
         inv.setItem(45, ZlomCoreHelper.getBackButton());
 

@@ -27,6 +27,7 @@ public class ClanLevelMenu implements Listener {
     public void openLevelMenu(Player player, Clan clan) {
         Inventory inv = Bukkit.createInventory(null, 27, MENU_TITLE);
 
+
         ItemStack wool = new ItemStack(Material.GREEN_WOOL);
         ItemMeta meta = wool.getItemMeta();
         meta.setDisplayName(ChatColor.GREEN + "Повысить уровень клана");
@@ -40,7 +41,11 @@ public class ClanLevelMenu implements Listener {
                 "",
                 ChatColor.YELLOW + "Текущий уровень: " + currentLevel,
                 ChatColor.GOLD + "Стоимость повышения: " + cost + " зломов",
-                ""
+                "",
+                ChatColor.AQUA + "Что даст следующий уровень:",
+                ChatColor.GRAY + "- Приватов: " + (2 + currentLevel) + " → " + (3 + currentLevel),
+                ChatColor.GRAY + "- Макс. диаметр привата: " + (100 + 25 * currentLevel) + " → " + (100 + 25 * (currentLevel + 1)),
+                ChatColor.GRAY + "- Повышение позиции в рейтинге кланов"
         ));
         wool.setItemMeta(meta);
 
@@ -49,6 +54,8 @@ public class ClanLevelMenu implements Listener {
         for(int i = 0; i < inv.getSize(); i++) {
             inv.setItem(i, filler);
         }
+
+        inv.setItem(inv.getSize() - 1, ZlomCoreHelper.getBackButton());
 
         inv.setItem(13, wool);
         player.openInventory(inv);

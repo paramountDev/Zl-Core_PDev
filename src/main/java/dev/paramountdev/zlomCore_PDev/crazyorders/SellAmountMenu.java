@@ -1,10 +1,13 @@
 package dev.paramountdev.zlomCore_PDev.crazyorders;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.List;
 
 public class SellAmountMenu {
 
@@ -18,19 +21,25 @@ public class SellAmountMenu {
     }
 
     public void open() {
-        Inventory inv = Bukkit.createInventory(null, 27, "Продажа: " + order.getMaterial());
+        Inventory inv = Bukkit.createInventory(null, 54, "Продажа: " + order.getMaterial());
 
-        inv.setItem(10, createButton("§a+1", Material.LIME_STAINED_GLASS_PANE));
-        inv.setItem(11, createButton("§a+10", Material.LIME_STAINED_GLASS_PANE));
-        inv.setItem(12, createButton("§c-1", Material.RED_STAINED_GLASS_PANE));
-        inv.setItem(13, createButton("§c-10", Material.RED_STAINED_GLASS_PANE));
-        inv.setItem(15, createButton("§eПродать §f" + amount, Material.GOLD_INGOT));
+        ZlomCoreHelper.fillInventory(inv, 0);
+
+        // Вертикальное расположение кнопок
+        inv.setItem(11, ZlomCoreHelper.createMinusHead("§c-10", List.of("")));
+        inv.setItem(20, ZlomCoreHelper.createMinusHead("§c-1", List.of("")));
+        inv.setItem(24, ZlomCoreHelper.createPlusHead("§a+1", List.of("")));
+        inv.setItem(33, ZlomCoreHelper.createPlusHead("§a+10", List.of("")));
+
+        // Кнопка продажи
+        inv.setItem(49, createButton("§eПродать §f" + amount, Material.GOLD_INGOT));
 
         // Храним текущее меню в static map для обработчика
         SellAmountListener.menuMap.put(player.getUniqueId(), this);
 
         player.openInventory(inv);
     }
+
 
     private ItemStack createButton(String name, Material mat) {
         ItemStack item = new ItemStack(mat);

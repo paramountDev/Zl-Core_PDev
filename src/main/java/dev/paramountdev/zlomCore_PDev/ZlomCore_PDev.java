@@ -13,16 +13,21 @@ import dev.paramountdev.zlomCore_PDev.basecommands.warp.SetWarpCommand;
 import dev.paramountdev.zlomCore_PDev.basecommands.warp.WarpCommand;
 import dev.paramountdev.zlomCore_PDev.basecommands.warp.WarpManager;
 import dev.paramountdev.zlomCore_PDev.boostyconnector.BoostConnector;
-import dev.paramountdev.zlomCore_PDev.parachats.ClanChat;
-import dev.paramountdev.zlomCore_PDev.parachats.GlobalChat;
-import dev.paramountdev.zlomCore_PDev.parachats.JailChat;
-import dev.paramountdev.zlomCore_PDev.parachats.LocalChat;
-import dev.paramountdev.zlomCore_PDev.parachats.PrivateChat;
 import dev.paramountdev.zlomCore_PDev.combatmanager.CombatManager;
 import dev.paramountdev.zlomCore_PDev.configchanger.BoostyConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.ClansConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.CommandConfigSettings;
 import dev.paramountdev.zlomCore_PDev.configchanger.FurnaceConfigGUI;
+import dev.paramountdev.zlomCore_PDev.crazyorders.ChatInputHandler;
+import dev.paramountdev.zlomCore_PDev.crazyorders.ItemSelectGUI;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrderBackButtonClickListener;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrderManager;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrdersCommand;
+import dev.paramountdev.zlomCore_PDev.crazyorders.OrdersGUI;
+import dev.paramountdev.zlomCore_PDev.crazyorders.PurchasedItemsManager;
+import dev.paramountdev.zlomCore_PDev.crazyorders.SellAmountListener;
+import dev.paramountdev.zlomCore_PDev.diamondshopper.ShopCommand;
+import dev.paramountdev.zlomCore_PDev.diamondshopper.ShopMenu;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceCommand;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.commands.AhBlockCommand;
@@ -32,14 +37,11 @@ import dev.paramountdev.zlomCore_PDev.galaxyeconomy.listeners.AhCommandBlocker;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.AhBlockManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.BalanceManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.vault.VaultHook;
-import dev.paramountdev.zlomCore_PDev.crazyorders.ChatInputHandler;
-import dev.paramountdev.zlomCore_PDev.crazyorders.ItemSelectGUI;
-import dev.paramountdev.zlomCore_PDev.crazyorders.OrderBackButtonClickListener;
-import dev.paramountdev.zlomCore_PDev.crazyorders.OrderManager;
-import dev.paramountdev.zlomCore_PDev.crazyorders.OrdersCommand;
-import dev.paramountdev.zlomCore_PDev.crazyorders.OrdersGUI;
-import dev.paramountdev.zlomCore_PDev.crazyorders.PurchasedItemsManager;
-import dev.paramountdev.zlomCore_PDev.crazyorders.SellAmountListener;
+import dev.paramountdev.zlomCore_PDev.parachats.ClanChat;
+import dev.paramountdev.zlomCore_PDev.parachats.GlobalChat;
+import dev.paramountdev.zlomCore_PDev.parachats.JailChat;
+import dev.paramountdev.zlomCore_PDev.parachats.LocalChat;
+import dev.paramountdev.zlomCore_PDev.parachats.PrivateChat;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
@@ -48,8 +50,6 @@ import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
-import dev.paramountdev.zlomCore_PDev.diamondshopper.ShopCommand;
-import dev.paramountdev.zlomCore_PDev.diamondshopper.ShopMenu;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -76,6 +76,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -636,6 +637,13 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         return warpOwners.getOrDefault(warp.toLowerCase(), "");
     }
 
+    public Map<String, Set<String>> getAllClansAsMap() {
+        Map<String, Set<String>> result = new HashMap<>();
+        for (Map.Entry<String, Clan> entry : clans.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().getMembers());
+        }
+        return result;
+    }
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp =

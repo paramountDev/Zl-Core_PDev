@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -108,6 +109,14 @@ public final class ZlomCoreHelper {
         fillerMeta.setDisplayName(" ");
         filler.setItemMeta(fillerMeta);
         return filler;
+    }
+
+    public static void fillInventory(Inventory inventory, int n) {
+        ItemStack filler = createFiller();
+        while(n < inventory.getSize()) {
+            inventory.setItem(n, filler);
+            n++;
+        }
     }
 
     public static void updatePlayerNames(Player player,

@@ -46,7 +46,7 @@ public class ChatInputHandler implements Listener {
                         if (amount <= 0) throw new NumberFormatException();
                         selectedAmount.put(uuid, amount);
                         stages.put(uuid, Stage.PRICE);
-                        player.sendMessage("§aСколько вы готовы заплатить за 1?");
+                        player.sendMessage("§aСколько вы заплатите за 1 сделку?");
                     }
                     case PRICE -> {
                         double price = Double.parseDouble(msg);

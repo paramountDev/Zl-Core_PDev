@@ -98,4 +98,50 @@ public class ClanStatsTracker {
                 })
                 .orElse("Нет данных");
     }
+
+    public List<String> getTopNByOnline(Set<String> clanMembers, int n) {
+        return clanMembers.stream()
+                .sorted(Comparator.comparingLong((String p) -> getStats(UUID.fromString(p)).getOnlineSeconds()).reversed())
+                .limit(n)
+                .map(uuid -> getName(UUID.fromString(uuid)))
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getTopNByBalance(Set<String> clanMembers, int n) {
+        return clanMembers.stream()
+                .sorted(Comparator.comparingDouble((String p) -> getStats(UUID.fromString(p)).getBalance()).reversed())
+                .limit(n)
+                .map(uuid -> getName(UUID.fromString(uuid)))
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getTopNByBlocks(Set<String> clanMembers, int n) {
+        return clanMembers.stream()
+                .sorted(Comparator.comparingLong((String p) -> getStats(UUID.fromString(p)).getBlocksMined()).reversed())
+                .limit(n)
+                .map(uuid -> getName(UUID.fromString(uuid)))
+                .collect(Collectors.toList());
+    }
+
+    public double getClanTotalBalance(Set<String> memberUUIDs) {
+        return memberUUIDs.stream()
+                .map(uuidStr -> getStats(UUID.fromString(uuidStr)).getBalance())
+                .mapToDouble(Double::doubleValue)
+                .sum();
+    }
+
+    public List<Map.Entry<String, Double>> getTopClansByBalance(Map<String, Set<String>> allClans, int limit) {
+        return allClans.entrySet().stream()
+                .map(entry -> Map.entry(entry.getKey(), getClanTotalBalance(entry.getValue())))
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+
+    private String getName(UUID uuid) {
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+        return offlinePlayer.getName() != null ? offlinePlayer.getName() : "Неизвестно";
+    }
+
 }

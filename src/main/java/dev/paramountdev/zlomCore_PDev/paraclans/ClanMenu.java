@@ -985,12 +985,13 @@ public class ClanMenu implements Listener {
     public void onBackButtonClick(InventoryClickEvent event) {
         Inventory inv = event.getInventory();
 
-        // Проверяем, открыто ли нужное меню
         if (inv != null && event.getView().getTitle() != null
                 && (event.getView().getTitle().equals("§6Приваты клана")
                 || event.getView().getTitle().equals("§8Участники клана"))
                 || event.getView().getTitle().startsWith("Войны клана: ")
-                || event.getView().getTitle().startsWith("Торговые контракты клана: ")) {
+                || event.getView().getTitle().startsWith("Торговые контракты клана: ")
+                || event.getView().getTitle().contains("Уровень клана")
+                || event.getView().getTitle().contains("§6Топ кланы")) {
             if (event.getCurrentItem() == null) {
                 event.setCancelled(true);
                 return;

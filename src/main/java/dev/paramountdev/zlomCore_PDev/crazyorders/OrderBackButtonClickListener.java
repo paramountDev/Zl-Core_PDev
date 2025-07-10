@@ -20,7 +20,7 @@ public class OrderBackButtonClickListener implements Listener {
         // Проверяем, открыто ли нужное меню
         if (inv != null && event.getView().getTitle() != null
                 && (event.getView().getTitle().equals("Купленные предметы")
-                || event.getView().getTitle().equals("Выбор предмета - стр. 1"))) {
+                || event.getView().getTitle().startsWith("Выбор предмета - стр."))) {
 
             if (event.getCurrentItem() == null) {
                 event.setCancelled(true);
