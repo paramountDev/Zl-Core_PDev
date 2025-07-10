@@ -1,6 +1,7 @@
 package dev.paramountdev.zlomCore_PDev.paraclans;
 
 import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
+import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -41,7 +42,8 @@ public enum PclanCommandType {
     TRADECONTRACTEND("tradecontractend"),
     MENU("menu"),
     SETTINGS("settings"),
-    AUTHOR("author");
+    AUTHOR("author"),
+    ALLIES("allies");
 
     private final String name;
 
@@ -460,6 +462,46 @@ public enum PclanCommandType {
                     return;
                 }
                 clanMenu.openSettingsMenu(player, clanSettings);
+                break;
+
+
+            case ALLIES:
+                if (args.length < 3) {
+                    player.sendMessage("§cИспользование: /pclans allies <accept|deny> <клан>");
+                    return;
+                }
+
+                ClanManager clanManager = ZlomCore_PDev.getInstance().getClanManager();
+                String action1 = args[1].toLowerCase();
+                String targetClanName1 = args[2];
+                Clan playerClan1 = ZlomCore_PDev.getInstance().getClanByPlayer(player.getUniqueId());
+
+                if (playerClan1 == null) {
+                    player.sendMessage("§cВы не состоите в клане.");
+                    return;
+                }
+
+                if (!playerClan1.getOwner().equals(player.getUniqueId())) {
+                    player.sendMessage("§cТолько владелец клана может принимать или отклонять союзы.");
+                    return;
+                }
+
+                if (action1.equals("accept")) {
+                    if (!clanManager.hasRequest(targetClanName1, playerClan1.getName())) {
+                        player.sendMessage("§cНет запроса на союз от " + targetClanName1);
+                        return;
+                    }
+                    clanManager.acceptAllyRequest(playerClan1.getName(), targetClanName1);
+                } else if (action1.equals("deny")) {
+                    if (!clanManager.hasRequest(targetClanName1, playerClan1.getName())) {
+                        player.sendMessage("§cНет запроса на союз от " + targetClanName1);
+                        return;
+                    }
+                    clanManager.denyAllyRequest(playerClan1.getName(), targetClanName1);
+                } else {
+                    player.sendMessage("§cНеизвестная подкоманда: " + action1);
+                }
+
                 break;
 
 

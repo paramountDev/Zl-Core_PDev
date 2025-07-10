@@ -2,11 +2,14 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 
 
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
+import dev.paramountdev.zlomCore_PDev.paraclans.allies.AllyPermissions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,6 +19,7 @@ public class Clan {
     public Set<String> members;
     public List<Clan> wars = new ArrayList<>();
     List<Clan> tradecontrats = new ArrayList<>();
+    public Map<String, AllyPermissions> allies;
     private int level = 1;
 
     public Clan(String name, UUID owner, Set<String> members, List<Clan> wars, List<Clan> tradecontrats) {
@@ -24,6 +28,7 @@ public class Clan {
         this.members = members;
         this.wars = wars;
         this.tradecontrats = tradecontrats;
+        this.allies = new HashMap<>();
     }
 
     public Clan(String name, UUID owner, Set<String> members) {
@@ -103,4 +108,28 @@ public class Clan {
     public int getLevel() { return level; }
 
     public void setLevel(int level) { this.level = level; }
+
+
+    public Map<String, AllyPermissions> getAllies() {
+        if (allies == null) {
+            allies = new HashMap<>();
+        }
+        return allies;
+    }
+
+    public void addAlly(String otherClanName, AllyPermissions perms) {
+        allies.put(otherClanName, perms);
+    }
+
+    public void removeAlly(String otherClanName) {
+        allies.remove(otherClanName);
+    }
+
+    public boolean isAlly(String otherClanName) {
+        return allies.containsKey(otherClanName);
+    }
+
+    public AllyPermissions getPermissionsForAlly(String otherClanName) {
+        return allies.getOrDefault(otherClanName, new AllyPermissions(false, false));
+    }
 }

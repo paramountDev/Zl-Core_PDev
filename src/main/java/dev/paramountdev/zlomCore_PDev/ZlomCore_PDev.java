@@ -43,10 +43,14 @@ import dev.paramountdev.zlomCore_PDev.parachats.JailChat;
 import dev.paramountdev.zlomCore_PDev.parachats.LocalChat;
 import dev.paramountdev.zlomCore_PDev.parachats.PrivateChat;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
+import dev.paramountdev.zlomCore_PDev.paraclans.ClanManager;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
 import dev.paramountdev.zlomCore_PDev.paraclans.PclanCommandType;
 import dev.paramountdev.zlomCore_PDev.paraclans.PlayerListener;
+import dev.paramountdev.zlomCore_PDev.paraclans.allies.AllyMenu;
+import dev.paramountdev.zlomCore_PDev.paraclans.allies.AllyPvpListener;
+import dev.paramountdev.zlomCore_PDev.paraclans.allies.MenuClickListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
@@ -107,6 +111,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private ClanLevelMenu clanLevelMenu;
     private AvikManager avikManager;
     private OrderManager orderManager;
+    private ClanManager clanManager;
+    private AllyMenu allyMenu;
 
     private final Map<String, String> warpOwners = new HashMap<>();
 
@@ -263,6 +269,14 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getCommand("tpa").setExecutor(new TpaCommand());
         getCommand("tpaccept").setExecutor(new TpAcceptCommand());
         getCommand("tpdeny").setExecutor(new TpDenyCommand());
+
+
+
+        clanManager = new ClanManager();
+        allyMenu = new AllyMenu(this, clanManager);
+
+        getServer().getPluginManager().registerEvents(new MenuClickListener(clanManager, allyMenu), this);
+        getServer().getPluginManager().registerEvents(new AllyPvpListener(clanManager), this);
 
 
         getLogger().log(Level.INFO, "\n");
@@ -643,6 +657,14 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
             result.put(entry.getKey(), entry.getValue().getMembers());
         }
         return result;
+    }
+
+    public AllyMenu getAllyMenu() {
+        return allyMenu;
+    }
+
+    public ClanManager getClanManager() {
+        return clanManager;
     }
 
     private boolean setupEconomy() {

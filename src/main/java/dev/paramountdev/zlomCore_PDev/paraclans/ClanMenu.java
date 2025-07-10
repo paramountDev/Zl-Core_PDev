@@ -342,7 +342,7 @@ public class ClanMenu implements Listener {
                 break;
 
             case BELL:
-                player.sendMessage("Вы нажали на Союзные кланы, эта функция будет доступна в следующем обновлении");
+              ZlomCore_PDev.getInstance().getAllyMenu().open(player, clan);
                 break;
 
             case BLUE_BUNDLE:
