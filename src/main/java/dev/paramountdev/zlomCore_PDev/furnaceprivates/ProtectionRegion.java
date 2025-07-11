@@ -7,16 +7,31 @@ import java.util.UUID;
 
 public class ProtectionRegion {
     private final Location center;
-    private final UUID owner;
+    private UUID owner;
     private int size;
     private int fuelTicks = 200;
     private int burnTime = 0;
     private int lastInputAmount = -1;
+    private long siegeAvailableAt = 0L;
+    private final UUID regionId = UUID.randomUUID();
 
     public ProtectionRegion(UUID ownerID, Location center) {
         this.owner = ownerID;
         this.center = center;
     }
+
+    public boolean isSiegeAvailable() {
+        return System.currentTimeMillis() >= siegeAvailableAt;
+    }
+
+    public void startPrivateSiegeCountdown() {
+        this.siegeAvailableAt = System.currentTimeMillis() + + 24 * 60 * 60 * 1000; // 24ч
+    }
+
+    public long getSiegeAvailableAt() {
+        return siegeAvailableAt;
+    }
+
 
     public void expand(int amount) {
         this.size += amount;
@@ -32,6 +47,10 @@ public class ProtectionRegion {
 
     public UUID getOwner() {
         return owner;
+    }
+
+    public void setOwner(UUID ownerID) {
+        owner = ownerID;
     }
 
     public boolean tickBurn() {
@@ -88,7 +107,9 @@ public class ProtectionRegion {
         this.size = newSize;
         this.fuelTicks = 200; // сбросим топливо на новое
     }
-
+    public UUID getRegionId() {
+        return regionId;
+    }
 
 }
 

@@ -486,7 +486,23 @@ public class FurnaceProtectionManager implements Listener {
                 (minZ1 <= maxZ2 && maxZ1 >= minZ2);
     }
 
+    public ProtectionRegion getRegionAtLocation(Location location) {
+        for (ProtectionRegion region : protections.values()) {
+            if (region.isInside(location)) {
+                return region;
+            }
+        }
+        return null; // Нет подходящего региона
+    }
 
+    public ProtectionRegion getRegionByOwner(UUID uuid) {
+        for (ProtectionRegion region : protections.values()) {
+            if (region.getOwner().equals(uuid)) {
+                return region;
+            }
+        }
+        return null;
+    }
 
 
 }

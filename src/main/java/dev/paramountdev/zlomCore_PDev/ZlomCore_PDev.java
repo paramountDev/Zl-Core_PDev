@@ -14,6 +14,7 @@ import dev.paramountdev.zlomCore_PDev.basecommands.warp.WarpCommand;
 import dev.paramountdev.zlomCore_PDev.basecommands.warp.WarpManager;
 import dev.paramountdev.zlomCore_PDev.boostyconnector.BoostConnector;
 import dev.paramountdev.zlomCore_PDev.combatmanager.CombatManager;
+import dev.paramountdev.zlomCore_PDev.combatmanager.PveOffCommand;
 import dev.paramountdev.zlomCore_PDev.configchanger.BoostyConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.ClansConfigGUI;
 import dev.paramountdev.zlomCore_PDev.configchanger.CommandConfigSettings;
@@ -37,6 +38,11 @@ import dev.paramountdev.zlomCore_PDev.galaxyeconomy.listeners.AhCommandBlocker;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.AhBlockManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.managers.BalanceManager;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.vault.VaultHook;
+import dev.paramountdev.zlomCore_PDev.occupation.ClaimCommand;
+import dev.paramountdev.zlomCore_PDev.occupation.playerWithClan.FurnaceClickListener;
+import dev.paramountdev.zlomCore_PDev.occupation.playerWithoutClan.OnJoinMessage;
+import dev.paramountdev.zlomCore_PDev.occupation.playerWithoutClan.SiegeMenu;
+import dev.paramountdev.zlomCore_PDev.occupation.playerWithoutClan.SiegeScheduler;
 import dev.paramountdev.zlomCore_PDev.parachats.ClanChat;
 import dev.paramountdev.zlomCore_PDev.parachats.GlobalChat;
 import dev.paramountdev.zlomCore_PDev.parachats.JailChat;
@@ -68,6 +74,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 
@@ -278,6 +285,24 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getServer().getPluginManager().registerEvents(new MenuClickListener(clanManager, allyMenu), this);
         getServer().getPluginManager().registerEvents(new AllyPvpListener(clanManager), this);
 
+
+        getCommand("claim").setExecutor(new ClaimCommand());
+        getServer().getPluginManager().registerEvents(new FurnaceClickListener(), this);
+        getServer().getPluginManager().registerEvents(new OnJoinMessage(), this);
+        getServer().getPluginManager().registerEvents(new SiegeMenu(), this);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                SiegeScheduler.checkExpirations();
+            }
+        }.runTaskTimer(ZlomCore_PDev.getInstance(), 0L, 20L * 300); // каждые 5 минут
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, SiegeScheduler::checkOutcomeExecutions, 20L * 60 * 5, 20L * 60 * 5); // каждые 5 минут
+
+
+
+        getCommand("pveoff").setExecutor(new PveOffCommand());
 
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");

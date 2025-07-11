@@ -95,6 +95,12 @@ commands:
   tpdeny:
     description: Отклонить запрос на телепортацию
 
+  claim:
+    description: Об'явить войну на регионе
+
+  pveoff:
+    description: Отключить режим PVE
+
 
 permissions:
 

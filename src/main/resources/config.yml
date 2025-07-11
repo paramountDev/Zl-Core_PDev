@@ -20,8 +20,14 @@ custom_furnace:
     - "&7Активируй её алмазом и углём"
 
 admin_bypass: true
-combat_cooldown_seconds: 10
 protection_from_player_radius: 10
+
+
+##### COMBAT MANAGER CONFIG #####
+pvp_system:
+  protection_duration_days: 7
+  combat_cooldown_seconds: 10
+  logout_jail_days: 3
 
 
 
@@ -176,6 +182,28 @@ warp:
   create-cost: 500000
   cross-world: false
   default-limit: 1
+
+
+
+
+##### OCCUPATION CONFIG #####
+
+occupation:
+  enabled: true
+  duration: 30 # секунд
+  messages:
+    start: "&6%player% начал оккупацию региона!"
+    cancelled: "&7Оккупация отменена."
+    success: "&cРегион перешел к %player%!"
+    failure: "&eОккупация не удалась. Защитников было больше."
+
+  delay-days: 3
+
+  siege-delay-hours: 24           # Время ожидания перед открытием меню после начала осады
+  outcome-delay-days: 3           # Время до автоматической обработки исхода (используется в OccupationTimedOutcome)
+  min-attackers-for-success: 2    # Минимум игроков в регионе, чтобы исход сработал
+  require-attackers: true         # Если false — исход будет происходить даже при отсутствии игроков
+
 
 
 
