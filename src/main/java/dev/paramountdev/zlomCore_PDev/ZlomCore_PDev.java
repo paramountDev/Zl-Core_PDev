@@ -60,6 +60,11 @@ import dev.paramountdev.zlomCore_PDev.paraclans.allies.MenuClickListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanStatsTracker;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.StatisticIncrementer;
+import dev.paramountdev.zlomCore_PDev.worlds.AccessManager;
+import dev.paramountdev.zlomCore_PDev.worlds.PWorldCommand;
+import dev.paramountdev.zlomCore_PDev.worlds.RequestManager;
+import dev.paramountdev.zlomCore_PDev.worlds.WorldManager;
+import dev.paramountdev.zlomCore_PDev.worlds.WorldMenu;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -121,7 +126,15 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
     private ClanManager clanManager;
     private AllyMenu allyMenu;
 
+    private WorldManager worldManager;
+    private RequestManager requestManager;
+
     private final Map<String, String> warpOwners = new HashMap<>();
+
+    private FileConfiguration worldsConfig;
+    private File worldsFile;
+    private WorldMenu worldMenu;
+    private AccessManager accessManager;
 
     @Override
     public void onEnable() {
@@ -301,8 +314,23 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, SiegeScheduler::checkOutcomeExecutions, 20L * 60 * 5, 20L * 60 * 5); // каждые 5 минут
 
 
-
         getCommand("pveoff").setExecutor(new PveOffCommand());
+
+
+
+        this.worldManager = new WorldManager(this);
+        this.requestManager = new RequestManager();
+
+        PWorldCommand pWorldCommand = new PWorldCommand(this);
+        getCommand("pworld").setExecutor(pWorldCommand);
+        getCommand("pworld").setTabCompleter(pWorldCommand);
+
+        worldMenu = new WorldMenu(this);
+        getServer().getPluginManager().registerEvents(worldMenu, this);
+
+        loadWorlds();
+
+        this.accessManager = new AccessManager(this);
 
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
@@ -361,6 +389,32 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().log(Level.INFO, "\n");
     }
 
+
+    public WorldMenu getWorldMenu() {
+        return worldMenu;
+    }
+
+    public AccessManager getAccessManager() {
+        return accessManager;
+    }
+
+    private void loadWorlds() {
+        this.worldsFile = new File(getDataFolder(), "worlds.yml");
+        if (!worldsFile.exists()) saveResource("worlds.yml", false);
+        this.worldsConfig = YamlConfiguration.loadConfiguration(worldsFile);
+    }
+
+    public void saveWorldsConfig() {
+        try {
+            worldsConfig.save(worldsFile);
+        } catch (Exception e) {
+            getLogger().severe("Ошибка при сохранении worlds.yml");
+        }
+    }
+
+    public FileConfiguration getWorldsConfig() {
+        return this.worldsConfig;
+    }
 
 
     private void loadClans() {
@@ -674,6 +728,15 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
     public String getWarpOwner(String warp) {
         return warpOwners.getOrDefault(warp.toLowerCase(), "");
+    }
+
+
+    public WorldManager getWorldManager() {
+        return worldManager;
+    }
+
+    public RequestManager getRequestManager() {
+        return requestManager;
     }
 
     public Map<String, Set<String>> getAllClansAsMap() {

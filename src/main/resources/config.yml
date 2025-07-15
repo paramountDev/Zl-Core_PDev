@@ -206,10 +206,26 @@ occupation:
 
 
 
+##### WORLDS CONFIG #####
+world:
+  size: 1000
+  creation-cost: 500.0
+  main-world: world
+
+
 
 
 
 messages:
+
+
+  # СООБЩЕНИЯ МИРА
+  not-enough-money-world: "&cНедостаточно денег (%cost%) для создания мира."
+  world-created: "&aМир '%world%' создан и загружен!"
+  teleported-to-own: "&aВы телепортированы в ваш личный мир."
+  returned-back: "&aВы вернулись обратно."
+
+
 
   # СООБЩЕНИЯ ЭКОНОМИКИ
   balance: "&aВаш баланс: %balance% зломов"

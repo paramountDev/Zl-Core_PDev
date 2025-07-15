@@ -101,6 +101,10 @@ commands:
   pveoff:
     description: Отключить режим PVE
 
+  pworld:
+    usage: /pworld <create|join|accept|deny|tp|back|author>
+    description: Управление личными мирами
+    aliases: [ world ]
 
 permissions:
 
@@ -124,4 +128,9 @@ permissions:
   teleportcore.spawn:
     default: true
   teleportcore.setspawn:
+    default: op
+
+
+  pworld.admin:
+    description: "Доступ администратора ко всем мирам"
     default: op
