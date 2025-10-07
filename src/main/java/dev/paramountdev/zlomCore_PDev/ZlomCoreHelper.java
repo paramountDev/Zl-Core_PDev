@@ -2,9 +2,6 @@ package dev.paramountdev.zlomCore_PDev;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import dev.paramountdev.zlomCore_PDev.LOL.occupation.paraclans.Clan;
-import dev.paramountdev.zlomCore_PDev.LOL.occupation.paraclans.ClanMenu;
-import dev.paramountdev.zlomCore_PDev.LOL.occupation.paraclans.ClanRoleManager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
