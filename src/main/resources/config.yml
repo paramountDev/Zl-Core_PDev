@@ -11,7 +11,21 @@ items:
   DIAMOND_BLOCK: 27
   NETHERITE_INGOT: 5
   NETHERITE_BLOCK: 45
+
+fuels:
+  COAL:
+    burn_value: 1
+  COAL_BLOCK:
+    burn_value: 9
+  LAVA_BUCKET:
+    burn_value: 20
+  CHARCOAL:    # пример с кастомным модел дата
+    burn_value: 1
+    custom_model_data: 1001
+
+
 burn_multiplier: 30
+
 
 custom_furnace:
   name: "&6[Приватная Печь]"

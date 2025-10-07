@@ -38,6 +38,8 @@ public class FurnaceProtectionManager implements Listener {
     private final Map<UUID, String> playerClan;
     private final Map<Location, ProtectionRegion> archivedProtections = new HashMap<>();
     private final Map<UUID, Long> lastCombatTime = new HashMap<>();
+    private final List<FuelItemData> fuelItems = new ArrayList<>();
+
 
 
 
@@ -57,6 +59,25 @@ public class FurnaceProtectionManager implements Listener {
             itemsSection.getValues(false).forEach((key, val) ->
                     itemValue.put(Material.valueOf(key), (Integer) val)
             );
+            ConfigurationSection fuelsSection = plugin.getConfig().getConfigurationSection("fuels");
+            if (fuelsSection != null) {
+                for (String key : fuelsSection.getKeys(false)) {
+                    try {
+                        Material mat = Material.valueOf(key);
+                        ConfigurationSection fuelInfo = fuelsSection.getConfigurationSection(key);
+                        int value = fuelInfo.getInt("burn_value", 1);
+                        Integer customModelData = fuelInfo.contains("custom_model_data") ?
+                                fuelInfo.getInt("custom_model_data") : null;
+
+                        fuelItems.add(new FuelItemData(mat, value, customModelData));
+                    } catch (IllegalArgumentException e) {
+                        plugin.getLogger().warning("Invalid material in fuels: " + key);
+                    }
+                }
+            } else {
+                plugin.getLogger().warning("Config section 'fuels' is missing!");
+            }
+
         } else {
             plugin.getLogger().warning("Config section 'items' is missing!");
         }
@@ -98,7 +119,8 @@ public class FurnaceProtectionManager implements Listener {
                         0.01    // speed — очень низкая
                 );
 
-                if (fuelItem == null || fuelItem.getType() != Material.COAL) {
+                FuelItemData fuelType = getMatchingFuel(fuelItem);
+                if (fuelType == null) {
                     iterator.remove();
                     archivedProtections.put(loc, region);
                     for(Player player : Bukkit.getOnlinePlayers()) {
@@ -113,6 +135,8 @@ public class FurnaceProtectionManager implements Listener {
 
                 if (region.getBurnTime() >= burnMultiplier * 20) {
                     region.resetBurnTime();
+
+                    int burnValue = fuelType.getBurnValue();
 
                     int newAmount = fuelItem.getAmount() - 1;
                     if (newAmount <= 0) {
@@ -193,7 +217,8 @@ public class FurnaceProtectionManager implements Listener {
         }
 
         // 🔁 Создание или обновление привата
-        if (input != null && itemValue.containsKey(input.getType()) && fuel != null && fuel.getType() == Material.COAL) {
+        FuelItemData fuelType = getMatchingFuel(fuel);
+        if (input != null && itemValue.containsKey(input.getType()) && fuelType != null) {
             int addedSize = itemValue.get(input.getType());
             int inputAmount = input.getAmount();
 
@@ -499,6 +524,16 @@ public class FurnaceProtectionManager implements Listener {
         for (ProtectionRegion region : protections.values()) {
             if (region.getOwner().equals(uuid)) {
                 return region;
+            }
+        }
+        return null;
+    }
+
+
+    private FuelItemData getMatchingFuel(ItemStack item) {
+        for (FuelItemData fuel : fuelItems) {
+            if (fuel.matches(item)) {
+                return fuel;
             }
         }
         return null;

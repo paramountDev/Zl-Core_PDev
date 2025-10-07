@@ -1,5 +1,6 @@
 package dev.paramountdev.zlomCore_PDev.crazyorders;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -25,6 +26,12 @@ public class OrdersGUI implements Listener {
 
     public void openOrdersMenu(Player player) {
         Inventory gui = Bukkit.createInventory(null, 54, "📦 Заказы");
+
+        ItemStack filler = ZlomCoreHelper.createFiller();
+        for(int i = 0; i < gui.getSize(); i++) {
+            gui.setItem(i, filler);
+        }
+
 
         List<Order> orders = manager.getOrders();
         for (Order order : orders) {

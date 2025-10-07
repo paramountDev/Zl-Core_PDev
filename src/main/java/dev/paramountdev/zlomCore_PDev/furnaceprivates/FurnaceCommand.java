@@ -1,6 +1,11 @@
 package dev.paramountdev.zlomCore_PDev.furnaceprivates;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -12,7 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-public class FurnaceCommand implements CommandExecutor {
+public class FurnaceCommand implements CommandExecutor, TabCompleter {
 
     private final ZlomCore_PDev plugin;
 
@@ -73,8 +78,34 @@ public class FurnaceCommand implements CommandExecutor {
             }
             return true;
         }
+        if (args[0].equalsIgnoreCase("author")) {
+            Player player = (Player) sender;
+            ZlomCoreHelper.sendAuthorMessage(player, "FurnaceGuards");
+            return true;
+        }
 
         return false;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return Arrays.asList("give", "list", "author").stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .toList();
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
+            List<String> names = new ArrayList<>();
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                names.add(online.getName());
+            }
+            return names.stream()
+                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .toList();
+        }
+
+        return Collections.emptyList();
     }
 }
 

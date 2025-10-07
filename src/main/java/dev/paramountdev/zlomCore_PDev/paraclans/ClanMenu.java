@@ -4,6 +4,8 @@ package dev.paramountdev.zlomCore_PDev.paraclans;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.FurnaceProtectionManager;
 import dev.paramountdev.zlomCore_PDev.furnaceprivates.ProtectionRegion;
+import dev.paramountdev.zlomCore_PDev.occupation.ClaimCommand;
+import dev.paramountdev.zlomCore_PDev.occupation.playerWithClan.FurnaceClickListener;
 import dev.paramountdev.zlomCore_PDev.paraclans.levels.ClanLevelMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.statistic.ClanTopMenu;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -328,7 +330,7 @@ public class ClanMenu implements Listener {
                 break;
 
             case PODZOL:
-                player.sendMessage("Вы нажали на Оккупация, эта функция будет доступна в следующем обновлении");
+                openOccupationOverviewMenu(player);
                 break;
 
             case EXPERIENCE_BOTTLE:
@@ -342,7 +344,7 @@ public class ClanMenu implements Listener {
                 break;
 
             case BELL:
-              ZlomCore_PDev.getInstance().getAllyMenu().open(player, clan);
+                ZlomCore_PDev.getInstance().getAllyMenu().open(player, clan);
                 break;
 
             case BLUE_BUNDLE:
@@ -981,6 +983,114 @@ public class ClanMenu implements Listener {
 
     //
 
+    // ОККУПАЦИЯ
+
+    public static void openOccupationOverviewMenu(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 54, ChatColor.DARK_GRAY + "Обзор Оккупации");
+
+        ItemStack filler = createFiller();
+        for (int i = 0; i < gui.getSize(); i++) {
+            gui.setItem(i, filler);
+        }
+
+
+        int leftSlot = 0;
+        for (Map.Entry<Player, ProtectionRegion> entry : ClaimCommand.getClaimedRegions().entrySet()) {
+            if (entry.getKey().equals(player)) {
+                Location loc = entry.getValue().getCenter();
+                ItemStack occupiedByUs = new ItemStack(Material.GREEN_CONCRETE);
+                ItemMeta meta = occupiedByUs.getItemMeta();
+                meta.setDisplayName(ChatColor.GREEN + "Мы оккупируем:");
+                meta.setLore(Arrays.asList(
+                        ChatColor.GRAY + "X: " + loc.getBlockX(),
+                        ChatColor.GRAY + "Y: " + loc.getBlockY(),
+                        ChatColor.GRAY + "Z: " + loc.getBlockZ()
+                ));
+                occupiedByUs.setItemMeta(meta);
+                gui.setItem(leftSlot++, occupiedByUs);
+            }
+        }
+
+
+        // Центральная цепь
+        for (int row = 0; row < 6; row++) {
+            int slot = row * 9 + 4;
+            ItemStack chain = new ItemStack(Material.CHAIN);
+            ItemMeta meta = chain.getItemMeta();
+            meta.setDisplayName(ChatColor.GRAY + "");
+            chain.setItemMeta(meta);
+            gui.setItem(slot, chain);
+        }
+
+
+        int[] rightSlots = {
+                5, 6, 7, 8,
+                14, 15, 16, 17,
+                23, 24, 25, 26,
+                32, 33, 34, 35,
+                41, 42, 43, 44,
+                50, 51, 52, 53
+        };
+        int rightIndex = 0;
+
+        for (Map.Entry<Player, ProtectionRegion> entry : ClaimCommand.getClaimedRegions().entrySet()) {
+            ProtectionRegion region = entry.getValue();
+
+
+            UUID ownerUUID = region.getOwner();
+            if (!ownerUUID.equals(player.getUniqueId())) {
+                continue;
+            }
+
+
+            Location loc = region.getCenter();
+            ItemStack underAttack = new ItemStack(Material.RED_CONCRETE);
+            ItemMeta meta = underAttack.getItemMeta();
+            meta.setDisplayName(ChatColor.RED + "Нас оккупируют:");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "X: " + loc.getBlockX(),
+                    ChatColor.GRAY + "Y: " + loc.getBlockY(),
+                    ChatColor.GRAY + "Z: " + loc.getBlockZ()
+            ));
+            underAttack.setItemMeta(meta);
+
+            gui.setItem(rightSlots[rightIndex++], underAttack);
+        }
+
+
+        // Кнопка "Начать оккупацию"
+        ItemStack claimButton = new ItemStack(Material.NETHERITE_SWORD);
+        ItemMeta swordMeta = claimButton.getItemMeta();
+        swordMeta.setDisplayName(ChatColor.DARK_RED + "Начать оккупацию региона");
+        swordMeta.setLore(Collections.singletonList(ChatColor.GRAY + "Нажмите что бы развязать войну с регионом на котором стоите"));
+        claimButton.setItemMeta(swordMeta);
+        gui.setItem(49, claimButton); // Слот по центру нижнего ряда
+
+
+        player.openInventory(gui);
+    }
+
+    @EventHandler
+    public void onOccupationClick(InventoryClickEvent e) {
+        if (e.getView().getTitle().equals(ChatColor.DARK_GRAY + "Обзор Оккупации")) {
+            e.setCancelled(true);
+
+            ItemStack clicked = e.getCurrentItem();
+            if (clicked == null || clicked.getType() == Material.AIR) return;
+
+            if (clicked.getType() == Material.NETHERITE_SWORD) {
+                Player player = (Player) e.getWhoClicked();
+                player.performCommand("claim");
+                player.closeInventory();
+            }
+        }
+    }
+
+
+    // ОККУПАЦИЯ
+
+    //
+
     @EventHandler
     public void onBackButtonClick(InventoryClickEvent event) {
         Inventory inv = event.getInventory();
@@ -1181,8 +1291,6 @@ public class ClanMenu implements Listener {
             }
         }
     }
-
-
 
 
     public String getFurnaceStatus(Location loc) {

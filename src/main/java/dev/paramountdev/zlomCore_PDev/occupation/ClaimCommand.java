@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class ClaimCommand implements CommandExecutor {
 
@@ -89,6 +90,14 @@ public class ClaimCommand implements CommandExecutor {
 
     public static HashMap<Player, ProtectionRegion> getClaimedRegions() {
         return claimedRegions;
+    }
+
+    public static Player getRegionOwner(ProtectionRegion region) {
+        Player owner = Bukkit.getPlayer(region.getOwner());
+        if(owner == null) {
+            owner = Bukkit.getOfflinePlayer(region.getOwner()).getPlayer();
+        }
+        return owner;
     }
 
 }

@@ -84,6 +84,11 @@ public class PurchasedItemsManager implements Listener {
         Inventory inv = Bukkit.createInventory(null, 27, "Купленные предметы");
         int slot = 0;
 
+        ItemStack filler = ZlomCoreHelper.createFiller();
+        for(int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, filler);
+        }
+
         for (Map.Entry<Material, Integer> entry : items.entrySet()) {
             ItemStack item = new ItemStack(entry.getKey(), entry.getValue());
             ItemMeta meta = item.getItemMeta();

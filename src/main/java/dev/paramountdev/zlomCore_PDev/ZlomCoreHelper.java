@@ -5,6 +5,10 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import dev.paramountdev.zlomCore_PDev.paraclans.Clan;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanMenu;
 import dev.paramountdev.zlomCore_PDev.paraclans.ClanRoleManager;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -237,4 +241,44 @@ public final class ZlomCoreHelper {
         return ZlomCore_PDev.getInstance().getConfig().getInt("chat.radius." + key, 100);
     }
 
+
+    public static void sendAuthorMessage(Player player, String pluginName) {
+        player.sendMessage("");
+        player.sendMessage("");
+        player.sendMessage(ChatColor.DARK_GREEN + "=====[ " + ChatColor.GOLD + "Разработчик " + pluginName + ChatColor.DARK_GREEN + " ]=====");
+        player.sendMessage("");
+        player.sendMessage(ChatColor.YELLOW + "Автор: " + ChatColor.GREEN + "ParamountDev");
+        player.sendMessage("");
+
+        // FunPay
+        TextComponent funpayPrefix = new TextComponent("• ");
+        funpayPrefix.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+
+        TextComponent funpayLink = new TextComponent("FunPay профиль");
+        funpayLink.setColor(net.md_5.bungee.api.ChatColor.AQUA);
+        funpayLink.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://funpay.com/uk/users/14397429/"));
+        funpayLink.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new ComponentBuilder("Открыть профиль FunPay").create()));
+
+        funpayPrefix.addExtra(funpayLink);
+        player.spigot().sendMessage(funpayPrefix);
+
+        // Telegram
+        TextComponent tgPrefix = new TextComponent("• ");
+        tgPrefix.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+
+        TextComponent tgLink = new TextComponent("Telegram: @paramount1_dev");
+        tgLink.setColor(net.md_5.bungee.api.ChatColor.AQUA);
+        tgLink.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://t.me/paramount1_dev"));
+        tgLink.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new ComponentBuilder("Открыть Telegram").create()));
+
+        tgPrefix.addExtra(tgLink);
+        player.spigot().sendMessage(tgPrefix);
+        player.sendMessage("");
+
+        player.sendMessage(ChatColor.DARK_GREEN + "===============================");
+        player.sendMessage("");
+        player.sendMessage("");
+    }
 }

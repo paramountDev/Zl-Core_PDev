@@ -131,6 +131,9 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
     private final Map<String, String> warpOwners = new HashMap<>();
 
+    private FurnaceClickListener furnaceClickListener;
+
+
     private FileConfiguration worldsConfig;
     private File worldsFile;
     private WorldMenu worldMenu;
@@ -173,6 +176,7 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         manager.startBurnTask();
         FurnaceCommand fp = new FurnaceCommand(this);
         this.getCommand("fp").setExecutor(fp);
+        this.getCommand("fp").setTabCompleter(fp);
 
         // FURNACE PRIVATES
 
@@ -182,7 +186,9 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
         balanceManager = new BalanceManager(this);
         ahBlockManager = new AhBlockManager(this);
-        getCommand("money").setExecutor(new MoneyCommand(this));
+        MoneyCommand moneyCommand = new MoneyCommand(this);
+        getCommand("money").setExecutor(moneyCommand);
+        getCommand("money").setTabCompleter(moneyCommand);
         getCommand("penalty").setExecutor(new PenaltyCommand(this));
         getCommand("ahblock").setExecutor(new AhBlockCommand(this));
         getServer().getPluginManager().registerEvents(new AhCommandBlocker(this), this);
@@ -255,7 +261,9 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
 
         orderManager = new OrderManager();
-        getCommand("orders").setExecutor(new OrdersCommand(orderManager));
+        OrdersCommand ordersCommand = new OrdersCommand(orderManager);
+        getCommand("orders").setExecutor(ordersCommand);
+        getCommand("orders").setTabCompleter(ordersCommand);
         getServer().getPluginManager().registerEvents(new OrdersGUI(orderManager), this);
         getServer().getPluginManager().registerEvents(new SellAmountListener(), this);
         getServer().getPluginManager().registerEvents(new PurchasedItemsManager(), this);
@@ -300,7 +308,10 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
 
 
         getCommand("claim").setExecutor(new ClaimCommand());
-        getServer().getPluginManager().registerEvents(new FurnaceClickListener(), this);
+
+        furnaceClickListener = new FurnaceClickListener();
+
+        getServer().getPluginManager().registerEvents(furnaceClickListener, this);
         getServer().getPluginManager().registerEvents(new OnJoinMessage(), this);
         getServer().getPluginManager().registerEvents(new SiegeMenu(), this);
 
@@ -331,6 +342,8 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         loadWorlds();
 
         this.accessManager = new AccessManager(this);
+
+
 
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
@@ -387,6 +400,11 @@ public final class ZlomCore_PDev extends JavaPlugin implements Listener, TabComp
         getLogger().info("\u001B[35m!TeleportCore enabled!\u001B[0m");
         getLogger().log(Level.INFO, "\n");
         getLogger().log(Level.INFO, "\n");
+    }
+
+
+    public FurnaceClickListener getFurnaceClickListener() {
+        return furnaceClickListener;
     }
 
 

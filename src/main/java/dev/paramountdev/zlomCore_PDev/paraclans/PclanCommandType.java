@@ -506,45 +506,7 @@ public enum PclanCommandType {
 
 
             case AUTHOR:
-                player.sendMessage("");
-                player.sendMessage("");
-                player.sendMessage(ChatColor.DARK_GREEN + "=====[ " + ChatColor.GOLD + "Разработчик ParaClans" + ChatColor.DARK_GREEN + " ]=====");
-                player.sendMessage("");
-                player.sendMessage(ChatColor.YELLOW + "Автор: " + ChatColor.GREEN + "ParamountDev");
-                player.sendMessage("");
-
-                // FunPay
-                TextComponent funpayPrefix = new TextComponent("• ");
-                funpayPrefix.setColor(net.md_5.bungee.api.ChatColor.GOLD);
-
-                TextComponent funpayLink = new TextComponent("FunPay профиль");
-                funpayLink.setColor(net.md_5.bungee.api.ChatColor.AQUA);
-                funpayLink.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://funpay.com/uk/users/14397429/"));
-                funpayLink.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                        new ComponentBuilder("Открыть профиль FunPay").create()));
-
-                funpayPrefix.addExtra(funpayLink);
-                player.spigot().sendMessage(funpayPrefix);
-
-                // Telegram
-                TextComponent tgPrefix = new TextComponent("• ");
-                tgPrefix.setColor(net.md_5.bungee.api.ChatColor.GOLD);
-
-                TextComponent tgLink = new TextComponent("Telegram: @paramount1_dev");
-                tgLink.setColor(net.md_5.bungee.api.ChatColor.AQUA);
-                tgLink.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://t.me/paramount1_dev"));
-                tgLink.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                        new ComponentBuilder("Открыть Telegram").create()));
-
-                tgPrefix.addExtra(tgLink);
-                player.spigot().sendMessage(tgPrefix);
-                player.sendMessage("");
-
-                player.sendMessage(ChatColor.DARK_GREEN + "===============================");
-                player.sendMessage("");
-                player.sendMessage("");
-
-
+                ZlomCoreHelper.sendAuthorMessage(player, "ParaClans");
                 break;
 
         }

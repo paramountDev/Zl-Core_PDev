@@ -1,9 +1,14 @@
 package dev.paramountdev.zlomCore_PDev.crazyorders;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 
-public class OrdersCommand implements CommandExecutor {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class OrdersCommand implements CommandExecutor, TabCompleter {
 
     private final OrderManager manager;
 
@@ -22,7 +27,25 @@ public class OrdersCommand implements CommandExecutor {
             new OrdersGUI(manager).openOrdersMenu(player);
             return true;
         }
+
+        if (args[0].equalsIgnoreCase("author")) {
+            ZlomCoreHelper.sendAuthorMessage(player, "CrazyOrders");
+            return true;
+        }
+
         return true;
     }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return Arrays.asList("author").stream()
+                    .filter(s -> s.startsWith(args[0].toLowerCase()))
+                    .toList();
+        }
+
+        return Collections.emptyList();
+    }
+
 }
 

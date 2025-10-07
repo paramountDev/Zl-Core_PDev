@@ -21,7 +21,9 @@ import java.util.*;
 
 public class FurnaceClickListener implements Listener {
 
-    private final Map<Location, OccupationData> activeOccupations = new HashMap<>();
+
+
+    public final Map<Location, OccupationData> activeOccupations = new HashMap<>();
     private final FileConfiguration config;
 
     public FurnaceClickListener() {
@@ -117,7 +119,7 @@ public class FurnaceClickListener implements Listener {
         }.runTaskTimer(ZlomCore_PDev.getInstance(), 0, 20);
     }
 
-    private static class OccupationData {
+    public static class OccupationData {
         private final Player starter;
         private final ProtectionRegion region;
 
@@ -126,8 +128,17 @@ public class FurnaceClickListener implements Listener {
             this.region = region;
         }
 
+        public ProtectionRegion getRegion() {
+            return region;
+        }
+
         public boolean isValid() {
             return starter.isOnline();
         }
     }
+
+    public static Map<Location, OccupationData> getActiveOccupations() {
+        return ZlomCore_PDev.getInstance().getFurnaceClickListener().activeOccupations;
+    }
+
 }

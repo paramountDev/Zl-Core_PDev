@@ -1,5 +1,6 @@
 package dev.paramountdev.zlomCore_PDev.diamondshopper;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -23,6 +24,12 @@ public class ShopMenu implements Listener {
 
     public void openShop(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, TITLE);
+
+
+        ItemStack filler = ZlomCoreHelper.createFiller();
+        for(int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, filler);
+        }
 
         inv.setItem(11, createItem(Material.DIAMOND, "Алмаз"));
         inv.setItem(15, createItem(Material.NETHERITE_INGOT, "Незерит"));

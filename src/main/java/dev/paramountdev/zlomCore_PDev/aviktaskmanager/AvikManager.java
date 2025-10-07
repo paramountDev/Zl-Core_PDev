@@ -1,5 +1,6 @@
 package dev.paramountdev.zlomCore_PDev.aviktaskmanager;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -166,6 +167,11 @@ public class AvikManager implements CommandExecutor, TabCompleter, Listener {
     private void openTaskMenu(Player player) {
         Inventory inv = Bukkit.createInventory(null, 54, MENU_TITLE);
 
+        ItemStack filler = ZlomCoreHelper.createFiller();
+        for(int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, filler);
+        }
+
         for (Task task : allTasks) {
             ItemStack paper = new ItemStack(Material.PAPER);
             ItemMeta meta = paper.getItemMeta();
@@ -191,6 +197,12 @@ public class AvikManager implements CommandExecutor, TabCompleter, Listener {
 
     private void openConfirmMenu(Player player, Task task) {
         Inventory confirm = Bukkit.createInventory(null, 27, "Задача: " + task.title);
+
+        ItemStack filler = ZlomCoreHelper.createFiller();
+        for(int i = 0; i < confirm.getSize(); i++) {
+            confirm.setItem(i, filler);
+        }
+
         ItemStack wool = new ItemStack(Material.GREEN_WOOL);
         ItemMeta meta = wool.getItemMeta();
         meta.setDisplayName(ChatColor.GREEN + "Взяться за эту задачу");
@@ -201,6 +213,11 @@ public class AvikManager implements CommandExecutor, TabCompleter, Listener {
 
     private void openOwnTasksMenu(Player player) {
         Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_PURPLE + "Ваши задачи");
+
+        ItemStack filler = ZlomCoreHelper.createFiller();
+        for(int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, filler);
+        }
 
         UUID playerId = player.getUniqueId();
 

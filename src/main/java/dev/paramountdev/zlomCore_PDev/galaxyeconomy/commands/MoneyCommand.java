@@ -1,16 +1,21 @@
 package dev.paramountdev.zlomCore_PDev.galaxyeconomy.commands;
 
+import dev.paramountdev.zlomCore_PDev.ZlomCoreHelper;
 import dev.paramountdev.zlomCore_PDev.ZlomCore_PDev;
 import dev.paramountdev.zlomCore_PDev.galaxyeconomy.utils.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
-public class MoneyCommand implements CommandExecutor {
+public class MoneyCommand implements CommandExecutor, TabCompleter {
 
     private final ZlomCore_PDev plugin;
 
@@ -26,6 +31,11 @@ public class MoneyCommand implements CommandExecutor {
         if (args.length == 0 || args[0].equalsIgnoreCase("balance")) {
             double balance = plugin.getBalanceManager().getBalance(uuid);
             player.sendMessage(MessageUtil.format("balance").replace("%balance%", String.format("%.2f", balance)));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("author")) {
+            ZlomCoreHelper.sendAuthorMessage(player, "GalaxyEconomy");
             return true;
         }
 
@@ -77,6 +87,26 @@ public class MoneyCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!(sender instanceof Player player)) return Collections.emptyList();
+
+        if (args.length == 1) {
+            return Arrays.asList("balance", "send", "add", "take", "author").stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .toList();
+        }
+
+        if (args.length == 2 && Arrays.asList("send", "add", "take").contains(args[0].toLowerCase())) {
+            return Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .toList();
+        }
+
+        return Collections.emptyList();
     }
 }
 
